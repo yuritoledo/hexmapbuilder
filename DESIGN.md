@@ -70,11 +70,13 @@ rounded:
 - Formulário: rótulos visíveis, controles nativos com altura mínima de 44px e fonte de 16px no celular.
 - Gerar região: pede confirmação nativa antes de substituir a folha e limpa a seleção ao confirmar.
 - A folha inclui semente, versão, terreno inicial e variantes.
-- Painel de consulta: estado vazio explícito; depois, coordenada, terreno, perigo, base quando presente e escala.
-- Hexágono: botão SVG com nome acessível que inclui terreno, perigo e base; foco móvel por teclado e aria-pressed para seleção.
+- Painel de consulta: estado vazio explícito; depois, coordenada, terreno, perigo, local opcional, base quando presente e escala.
+- Hexágono: botão SVG com nome acessível que inclui terreno, perigo, local opcional e base; foco móvel por teclado e aria-pressed para seleção.
 - Legenda: sete unidades de terreno, nomes e relação entre contagem e perigo. Um vilarejo indica a base central.
 - Linha de conferência: 50mm em cada página.
 - Instruções de impressão: conteúdo recolhível, fora da folha.
+- Local opcional: losango vazio acima das unidades de terreno, sem mudar a contagem de perigo nem ocultar a base.
+- Chave de quem mestra: tabela recolhível abaixo da folha, com coordenada, terreno, local/base e perigo. A tabela permite rolagem horizontal no celular e não imprime nesta etapa (#9).
 
 ## Do's and Don'ts
 

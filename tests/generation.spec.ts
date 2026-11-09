@@ -65,7 +65,7 @@ test('imprime sementes longas e espaços sem perder a versão nem as margens', a
     await page.getByRole('button', { name: 'Gerar região', exact: true }).click();
     await page.emulateMedia({ media: 'print' });
     const label = page.locator('.map-generation').first();
-    await expect(label).toHaveText(`Semente: ${JSON.stringify(seed)} · region-v2`);
+    await expect(label).toHaveText(`Semente: ${JSON.stringify(seed)} · region-v3`);
     const bounds = await label.evaluate(element => {
       const text = element as SVGTextElement;
       const box = text.getBBox();

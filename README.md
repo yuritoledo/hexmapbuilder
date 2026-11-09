@@ -2,10 +2,10 @@
 
 - Gerador de mapas hexagonais OSR para preparar e imprimir aventuras.
 - Preto e branco, traço artesanal e interface em português brasileiro.
-- Estado atual: geração de terrenos por semente, perigo por contagem de símbolos e Base das Expedições no centro.
+- Estado atual: terrenos, perigo e locais por semente, chave na tela e Base das Expedições permanente no centro.
 - A grade B foi aprovada: 108 hexágonos, ponta para cima e margens mínimas de 12 mm.
 - Perigo real aparece como 1–4 símbolos de terreno. O centro contém um vilarejo, a Base das Expedições.
-- Locais aleatórios, edição e salvamento entram nos próximos tickets.
+- Edição e salvamento entram nos próximos tickets.
 
 ## Executar
 
@@ -33,13 +33,14 @@
 - As coordenadas são únicas dentro da região.
 - **10 km é a distância entre lados opostos de um hexágono**, não entre vértices.
 - Essa distância também corresponde à distância entre centros de hexágonos vizinhos.
-- Clique em um hexágono para consultar terreno e coordenada.
+- Clique em um hexágono para consultar coordenada, terreno, perigo, local opcional e base permanente.
+- Abra **Chave de quem mestra** abaixo do mapa para consultar todos os hexágonos. No celular, a tabela permite rolagem horizontal.
 - Tab entra em cada grade. As setas movem o foco por coluna ou linha, sem dar a volta nas bordas.
 - Enter ou Espaço seleciona. Home e End movem para o início e fim da linha.
 - Apenas um hexágono fica selecionado.
 - No celular, a seleção traz o painel de consulta para a tela.
 
-## Contrato de geração: region-v2
+## Contrato de geração: region-v3
 
 - Esta é uma adaptação em lote das tabelas da spec. Não simula exploração progressiva.
 - A tabela inicial usa dois d6: 2 Deserto/Ártico; 3 Pântano; 4–6 Pradaria; 7–8 Floresta/Selva; 9–10 Rio/Litoral; 11 Oceano; 12 Montanha.
@@ -61,7 +62,15 @@
 - O mapa mostra respectivamente 1, 2, 3 ou 4 unidades do terreno. Essa escolha visual substitui círculo e caveiras da spec, por aprovação do usuário.
 - O centro contém um único povoado chamado Base das Expedições, representado por um vilarejo. O terreno e o perigo do centro continuam gerados normalmente, inclusive em água. Essa base é uma convenção do aplicativo, não uma regra do livro.
 - A consulta mostra o nome do perigo e a base. A impressão inclui a mesma legenda e o vilarejo.
-- Não gera os demais locais do ticket #5 nem uma chave separada. Controles de sigilo ficam no ticket #9.
+- `region-v3` acrescenta locais opcionais por `local-v1`, sem mudar as sequências de terreno de `terrain-v1` nem de perigo de `danger-v1`.
+- Locais usam FNV-1a + Mulberry32 com a semente original seguida de `\0local-v1` (separador NUL). Esse fluxo independente visita as células por linha e coluna.
+- Cada célula consome um d6 de presença. **Somente 1 gera local**. Resultados 2–6 não consomem dados extras.
+- Quando há local, outro d6 escolhe a categoria na ordem: 1 povoado, 2 masmorra, 3 ruína, 4 covil, 5 santuário, 6 marco. Um terceiro d6 escolhe um dos seis nomes da categoria em `src/locals.ts`.
+- Esta é uma política específica do aplicativo, não uma tabela do livro. Os 36 nomes são conteúdo original em pt-BR, sem serviço externo. São lugares de exploração, não nomes de pessoas. Nomes podem se repetir.
+- Todas as categorias podem ocorrer em qualquer terreno, inclusive água. Não há filtro, nova rolagem ou promessa de coerência geográfica.
+- `local` guarda somente nome e categoria. `expeditionBase` continua separado e permanente; o centro pode conter ambos, inclusive em água.
+- Um losango vazio indica local opcional, acima dos símbolos de terreno. Não substitui unidades de perigo nem o vilarejo da base. Nome e categoria aparecem na seleção, no nome acessível e na chave.
+- A chave desta etapa é somente para a tela. A impressão mantém o mapa com perigo, base e marcadores. Sigilo e paginação da chave pertencem ao ticket #9.
 - Não há cataclismos nem promessa de clima, costas ou rios contínuos.
 
 ## Imprimir ou salvar PDF
@@ -88,6 +97,7 @@
 - **Sem framework de interface:** uma página com estado local, sem API.
 - `src/grid.ts`: tipos de terreno e geometria em milímetros. A alternativa A fica para regressão geométrica; só B aparece na interface.
 - `src/generation.ts`: tabelas, dados com semente, visita da grade e metadados da região.
+- `src/locals.ts`: política de presença, categoria e nomes originais dos locais.
 - `src/map-view.ts`: desenha a folha, a legenda ativa e os símbolos locais.
 - `src/main.ts`: controla formulário, confirmação, geração, foco e seleção. Mudar o foco não muda a seleção.
 - `src/style.css`: define a apresentação responsiva e as regras de impressão.
@@ -106,7 +116,7 @@
 - Todos os testes unitários: `npm run test:all`.
 - Testes de navegador: `npm run test:e2e`.
 - Build de produção: `npm run build`.
-- Os testes de navegador iniciam o servidor na porta 4173. Libere essa porta antes de executar em CI.
+- Por padrão, os testes de navegador usam a porta 4173. Use `PLAYWRIGHT_PORT=4185 npm run test:e2e` para iniciar um servidor próprio em outra porta. Com essa variável, Playwright não reutiliza servidores existentes.
 - O teste de impressão grava `comparacao-a4.pdf` em seu subdiretório de `test-results/`.
 
 ## Arte e dependências
