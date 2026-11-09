@@ -1,30 +1,52 @@
-import type { HexCell, Terrain } from './grid';
+import { dangerNames, type HexCell, type Terrain } from './grid';
 import { terrainNames, type GeneratedRegion, type GenerationOptions } from './generation';
 
-// Desenhos originais deste projeto. Nenhum símbolo vem da referência privada.
-const terrainPaths: Record<Terrain, string> = {
-  Pradaria: 'M-4 2l1-2 1 2m1-1 1-3 1 3m1 1 1-2 1 2M-5 4h3m2 0h4',
-  Floresta: 'M-4 2l2-4 2 4h-4m2 0v2m1-3 2-4 3 5H0m2 0v2',
-  Montanha: 'M-5 3l4-7 3 5 2-3 3 5M-3 0l2-1 1 1m2 1 2-1',
-  Pântano: 'M-5 3q2-1 4 0t5 0M-2 1v-5m0 2-2-1m2 2 2-2M3 1v-3m0 1 2-1',
-  Deserto: 'M-5 3q3-5 6-1t4 0M-3 4q3-2 6 0M-3-3h.1m6 2h.1',
-  Rio: 'M-4-4q6 1 3 4t3 4M-1-4q6 1 3 4t3 4',
-  Oceano: 'M-5-2q1-2 3 0t3 0 3 0M-5 1q1-2 3 0t3 0 3 0M-5 4q1-2 3 0t3 0 3 0',
-  Ártico: 'M-4 3l2-4 2 4 2-6 3 6M-2-1v-3m-1 1 2 1M2-3l1-2 2 2M-4 4h9',
-  Selva: 'M-4 0q-2-4 1-4 2-2 3 0 4-1 4 2 2 3-2 3h-6M-1 1v3m-2 0h5',
-  Litoral: 'M-4-4q4 3 1 6l-1 2M0-1q1-2 3 0t3 0M0 2q1-2 3 0t3 0',
+import forest from './assets/kenney/pine.svg?raw';
+import village from './assets/kenney/village.svg?raw';
+import desert from './assets/kenney/desert.svg?raw';
+import jungle from './assets/kenney/jungle.svg?raw';
+import river from './assets/kenney/river.svg?raw';
+import ocean from './assets/kenney/wave.svg?raw';
+
+// Kenney Cartography Pack (CC0). Os outros cinco símbolos são originais.
+const terrainSymbols: Record<Terrain, string> = {
+  Pradaria: '<path d="M0 3Q-0.5 0-1-3M0 3Q-2-0.5-4-1M0 3Q1-1 3-3M0 3Q2 0 4 0M0 3Q-2 1-4 2" />',
+  Pântano: '<path d="M0 3Q-0.5 0-1-3M0 3Q-2-0.5-4-1M0 3Q1-1 3-3M0 3Q2 0 4 0M0 3Q-2 1-4 2M-4 4q2-1 4 0t4 0" />',
+  Floresta: forest,
+  Montanha: '<path d="M-4 3 0-4 4 3M-1.5-1 0 0 1.5-1" />',
+  Deserto: desert,
+  Rio: river,
+  Oceano: ocean,
+  Ártico: '<path d="M-4 3 0-4 4 3M-1.5-1 0 0 1.5-1M0-3v3m-1-2 2 1m-2 0 2-1" />',
+  Selva: jungle,
+  Litoral: '<path d="M-3-4q5 4 0 8M0 1q2-2 4 0" />',
 };
 
 export function terrainSymbol(terrain: Terrain, x: number, y: number, scale = 1): string {
-  return `<path class="terrain-symbol" transform="translate(${x} ${y}) scale(${scale})" d="${terrainPaths[terrain]}" />`;
+  const symbol = terrainSymbols[terrain];
+  const source = symbol.startsWith('<svg') ? 'kenney' : 'original';
+  return `<g class="terrain-symbol" data-source="${source}" transform="translate(${x} ${y}) scale(${scale})">${symbol}</g>`;
 }
 
+function escapeAttribute(value: string): string {
+  return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
+}
+
+export function cellSymbol(cell: HexCell, x: number, y: number): string {
+  const positions = cell.expeditionBase ? [[-6, -2.5], [6, -2.5], [-6, 2.5], [6, 2.5]] :
+    cell.danger === 1 ? [[0, 0]] : cell.danger === 2 ? [[-3, 0], [3, 0]] :
+      cell.danger === 3 ? [[0, -2.5], [-3, 2.5], [3, 2.5]] :
+        [[-3, -2.5], [3, -2.5], [-3, 2.5], [3, 2.5]];
+  const symbols = positions.slice(0, cell.danger).map(([dx, dy]) =>
+    `<g data-biome-unit="${cell.terrain}">${terrainSymbol(cell.terrain, dx!, dy!, cell.expeditionBase ? 0.32 : 0.5)}</g>`).join('');
+  return `<g transform="translate(${x} ${y})">${symbols}${cell.expeditionBase ? `<g class="terrain-symbol" data-expedition-base="vilarejo">${village}</g>` : ''}</g>`;
+}
 function hexMarkup(cell: HexCell, index: number): string {
   const points = cell.corners.map(point => `${point.x},${point.y}`).join(' ');
   return `<g class="hex" role="button" tabindex="${index === 0 ? 0 : -1}" aria-pressed="false"
-      aria-label="Hexágono ${cell.coordinate} · ${cell.terrain}" data-index="${index}">
+      aria-label="Hexágono ${cell.coordinate} · ${cell.terrain} · ${dangerNames[cell.danger]} (${cell.danger})${cell.expeditionBase ? ` · Vilarejo, ${escapeAttribute(cell.expeditionBase.name)}` : ''}" data-index="${index}" data-danger="${cell.danger}">
     <polygon class="hex-boundary" points="${points}" />
-    ${terrainSymbol(cell.terrain, cell.center.x, cell.center.y - 1)}
+    ${cellSymbol(cell, cell.center.x, cell.center.y - 1)}
     <text class="coordinate" x="${cell.center.x}" y="${cell.center.y + 6}">${cell.coordinate}</text>
   </g>`;
 }
@@ -55,6 +77,7 @@ export function mapSheet(container: HTMLElement, region: GeneratedRegion): void 
             return `${terrainSymbol(terrain, x, 259, 0.62)}<text x="${x}" y="267">${terrain}</text>`;
           }).join('')}
         </g>
+        <text class="scale-note danger-legend" x="12" y="272">${Object.entries(dangerNames).map(([level, name]) => `${level}${level === '1' ? ' símbolo' : ''}: ${name}`).join(' · ')} · Vilarejo: base central</text>
         <text class="scale-note" x="12" y="276">10 km entre lados opostos de cada hexágono; também entre centros vizinhos.</text>
         <path class="calibration" d="M12 281v3m0-1.5h50m0-1.5v3" />
         <text class="calibration-label" x="65" y="284">50 mm · confira após imprimir</text>

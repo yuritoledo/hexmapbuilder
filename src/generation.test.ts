@@ -60,7 +60,7 @@ describe('expansão a partir de um vizinho já gerado', () => {
 
   it('conserva o resultado conhecido de terrain-v1 para terras-01', () => {
     const region = generateRegion({ ...densities.compacta, columns: 3, rows: 3 }, defaultOptions);
-    expect(region.version).toBe('terrain-v1');
+    expect(region.version).toBe('region-v2');
     expect(region.cells.map(cell => cell.terrain)).toEqual([
       'Floresta', 'Floresta', 'Rio',
       'Rio', 'Rio', 'Rio',
@@ -71,7 +71,7 @@ describe('expansão a partir de um vizinho já gerado', () => {
     const options = { ...defaultOptions, seed: 'campanha-á-42' };
     const first = generateRegion(densities.compacta, options);
     expect(generateRegion(densities.compacta, options)).toEqual(first);
-    expect(first.version).toBe('terrain-v1');
+    expect(first.version).toBe('region-v2');
     expect(first.options).toEqual(options);
     expect(generateRegion(densities.compacta, { ...options, seed: 'campanha-b-42' }).cells)
       .not.toEqual(first.cells);
@@ -93,5 +93,21 @@ describe('expansão a partir de um vizinho já gerado', () => {
     expect(region.centerCoordinate).toBe('0201');
     expect(region.cells.map(cell => cell.terrain)).toEqual(['Deserto', 'Oceano', 'Oceano']);
     expect(dice).toHaveLength(0);
+  });
+});
+
+describe('perigo e base das expedições', () => {
+  it('aplica todas as fronteiras do d6 sem mudar os terrenos', () => {
+    const dice = [1, 2, 3, 4, 5, 6];
+    const region = generateRegion({ ...densities.compacta, columns: 3, rows: 2 },
+      { ...defaultOptions, initialTerrain: 'forest' }, () => 3, () => dice.shift()!);
+    expect(region.cells.map(cell => cell.danger)).toEqual([1, 2, 2, 3, 3, 4]);
+    expect(region.cells.every(cell => cell.terrain === 'Floresta')).toBe(true);
+    expect(dice).toHaveLength(0);
+    expect(region.cells.filter(cell => cell.expeditionBase)).toHaveLength(1);
+    expect(region.cells.find(cell => cell.expeditionBase)?.coordinate).toBe('0201');
+    expect(region.cells.find(cell => cell.expeditionBase)?.expeditionBase).toEqual({
+      name: 'Base das Expedições', category: 'povoado',
+    });
   });
 });

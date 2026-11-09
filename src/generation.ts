@@ -22,7 +22,7 @@ export function roll2d6(rollDie: () => number): number {
   return rollDie() + rollDie();
 }
 
-export const GENERATION_VERSION = 'terrain-v1';
+export const GENERATION_VERSION = 'region-v2';
 export interface GenerationOptions {
   seed: string;
   initialTerrain: TerrainPosition | 'random';
@@ -63,6 +63,7 @@ function seededDie(seed: string): () => number {
 
 export function generateRegion(
   density: Density, options: GenerationOptions, rollDie: () => number = seededDie(options.seed),
+  rollDanger: () => number = seededDie(`${options.seed}\0danger-v1`),
 ): GeneratedRegion {
   const cells = createGrid(density);
   const centerIndex = Math.floor((density.rows - 1) / 2) * density.columns + Math.floor((density.columns - 1) / 2);
@@ -90,6 +91,13 @@ export function generateRegion(
   return {
     version: GENERATION_VERSION, options: { ...options }, density: { ...density },
     centerCoordinate: cells[centerIndex]!.coordinate,
-    cells: cells.map((cell, index) => ({ ...cell, terrain: names[positions.get(index)!] })),
+    cells: cells.map((cell, index) => {
+      const roll = rollDanger();
+      const danger = roll === 1 ? 1 : roll <= 3 ? 2 : roll <= 5 ? 3 : 4;
+      return {
+        ...cell, terrain: names[positions.get(index)!], danger,
+        ...(index === centerIndex ? { expeditionBase: { name: 'Base das Expedições', category: 'povoado' as const } } : {}),
+      };
+    }),
   };
 }

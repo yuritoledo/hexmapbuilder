@@ -15,7 +15,7 @@ rounded:
 
 - A folha branca é o objeto principal da interface.
 - A apresentação usa uma referência editorial: título serifado, legenda compacta e controles simples.
-- O ticket #3 define o aspecto monocromático e os símbolos próprios.
+- O ticket #3 define o aspecto monocromático. O usuário aprova recortes Kenney CC0, capim aberto, perigo por contagem de unidades e vilarejo central.
 - O usuário aprova a direção visual em 2026-11-09.
 - Grade aprovada: B Compacta, 108 hexágonos, ponta para cima e margens mínimas de 12 mm.
 
@@ -60,7 +60,8 @@ rounded:
 
 - Os hexágonos são regulares, com ponta para cima e linhas alternadas deslocadas.
 - A grade usa contorno pontilhado de 0.3mm na impressão.
-- Os símbolos usam traço próprio, sem preenchimento e com extremidades arredondadas.
+- Os símbolos usam vetores Kenney CC0 e cinco desenhos próprios, sem preenchimento e com extremidades arredondadas.
+- As unidades de terreno usam caixa de 12 × 10 mm e escala 0,5 no mapa. Ao redor da base, usam escala 0,32. A legenda usa escala 0,62. O vilarejo central usa caixa de 9 × 7 mm.
 - O botão principal tem raio de 3px. As folhas têm cantos retos.
 
 ## Components
@@ -69,9 +70,9 @@ rounded:
 - Formulário: rótulos visíveis, controles nativos com altura mínima de 44px e fonte de 16px no celular.
 - Gerar região: pede confirmação nativa antes de substituir a folha e limpa a seleção ao confirmar.
 - A folha inclui semente, versão, terreno inicial e variantes.
-- Painel de consulta: estado vazio explícito; depois, coordenada, terreno, alternativa e escala.
-- Hexágono: botão SVG com nome acessível, foco móvel por teclado e aria-pressed para seleção.
-- Legenda: sete símbolos e seus nomes em cada página.
+- Painel de consulta: estado vazio explícito; depois, coordenada, terreno, perigo, base quando presente e escala.
+- Hexágono: botão SVG com nome acessível que inclui terreno, perigo e base; foco móvel por teclado e aria-pressed para seleção.
+- Legenda: sete unidades de terreno, nomes e relação entre contagem e perigo. Um vilarejo indica a base central.
 - Linha de conferência: 50mm em cada página.
 - Instruções de impressão: conteúdo recolhível, fora da folha.
 

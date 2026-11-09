@@ -1,8 +1,8 @@
 import '@fontsource-variable/literata';
 import './style.css';
-import { densities, type Density, type HexCell } from './grid';
+import { densities, dangerNames, type Density, type HexCell } from './grid';
 import { defaultOptions, generateRegion, terrainNames, terrainPositions, type GenerationOptions } from './generation';
-import { mapSheet, terrainSymbol, generationOptionsLabel } from './map-view';
+import { mapSheet, cellSymbol, generationOptionsLabel } from './map-view';
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Elemento principal não encontrado.');
@@ -42,7 +42,7 @@ app.innerHTML = `
           <h2>Hexágono em foco</h2>
           <div id="selection" role="status" aria-live="polite" aria-atomic="true">
             <p class="empty-selection">Seu mapa começa com um olhar.</p>
-            <p>Selecione um hexágono para consultar sua coordenada e seu terreno.</p>
+            <p>Selecione um hexágono para consultar terreno, perigo e base central.</p>
           </div>
         </section>
         <section>
@@ -62,8 +62,8 @@ app.innerHTML = `
       </div>
     </div>
     <footer class="app-footer">
-      <p>Geração de terrenos · ainda sem locais, perigo, edição ou salvamento.</p>
-      <p>Arte própria. Feito para histórias que começam pequenas.</p>
+      <p>Terrenos, perigo e base central · ainda sem locais aleatórios, edição ou salvamento.</p>
+      <p>Vetores Kenney (CC0) e desenhos próprios. Feito para histórias que começam pequenas.</p>
     </footer>
   </main>`;
 
@@ -101,10 +101,15 @@ function selectHex(element: SVGGElement, density: Density, cell: HexCell) {
   element.setAttribute('aria-pressed', 'true');
   selection.innerHTML = `<p class="selection-density">${density.label}</p>
     <p class="selection-coordinate">${cell.coordinate}</p>
-    <p class="selection-terrain"><svg viewBox="-7 -7 14 14" aria-hidden="true">${terrainSymbol(cell.terrain, 0, 0)}</svg>${cell.terrain}</p>
+    <p class="selection-terrain"><svg viewBox="-9 -8 18 16" aria-hidden="true">${cellSymbol(cell, 0, 0)}</svg>${cell.terrain}</p>
     <dl><div><dt>Coluna</dt><dd>${String(cell.column + 1).padStart(2, '0')}</dd></div>
     <div><dt>Linha</dt><dd>${String(cell.row + 1).padStart(2, '0')}</dd></div>
-    <div><dt>Escala</dt><dd>10 km / hexágono</dd></div></dl>`;
+    <div><dt>Escala</dt><dd>10 km / hexágono</dd></div>
+    <div><dt>Perigo</dt><dd>${dangerNames[cell.danger]} (${cell.danger})</dd></div></dl>
+    ${cell.expeditionBase ? '<p class="selection-base"></p>' : ''}`;
+  if (cell.expeditionBase) {
+    selection.querySelector('.selection-base')!.textContent = `Vilarejo · ${cell.expeditionBase.name}`;
+  }
   if (window.matchMedia('(max-width: 650px)').matches) {
     selection.scrollIntoView({ block: 'nearest' });
   }
@@ -114,7 +119,7 @@ function renderRegion() {
   const { density, cells } = region;
   const sheet = app!.querySelector<HTMLElement>('#comparison')!;
   mapSheet(sheet, region);
-  selection.innerHTML = '<p>Selecione um hexágono para consultar sua coordenada e seu terreno.</p>';
+  selection.innerHTML = '<p>Selecione um hexágono para consultar terreno, perigo e base central.</p>';
   app!.querySelector('#generation-summary')!.textContent =
     `Mapa atual · Semente: ${JSON.stringify(region.options.seed)} · ${region.version} · Centro: ${region.centerCoordinate} · ${generationOptionsLabel(region.options)}`;
   const hexes = Array.from(sheet.querySelectorAll<SVGGElement>('.hex'));

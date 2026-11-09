@@ -2,9 +2,10 @@
 
 - Gerador de mapas hexagonais OSR para preparar e imprimir aventuras.
 - Preto e branco, traço artesanal e interface em português brasileiro.
-- Estado atual: geração de terrenos por semente do [ticket #4](https://github.com/yuritoledo/hexmapbuilder/issues/4).
+- Estado atual: geração de terrenos por semente, perigo por contagem de símbolos e Base das Expedições no centro.
 - A grade B foi aprovada: 108 hexágonos, ponta para cima e margens mínimas de 12 mm.
-- Locais, perigo, edição e salvamento entram nos próximos tickets.
+- Perigo real aparece como 1–4 símbolos de terreno. O centro contém um vilarejo, a Base das Expedições.
+- Locais aleatórios, edição e salvamento entram nos próximos tickets.
 
 ## Executar
 
@@ -38,7 +39,7 @@
 - Apenas um hexágono fica selecionado.
 - No celular, a seleção traz o painel de consulta para a tela.
 
-## Contrato de geração: terrain-v1
+## Contrato de geração: region-v2
 
 - Esta é uma adaptação em lote das tabelas da spec. Não simula exploração progressiva.
 - A tabela inicial usa dois d6: 2 Deserto/Ártico; 3 Pântano; 4–6 Pradaria; 7–8 Floresta/Selva; 9–10 Rio/Litoral; 11 Oceano; 12 Montanha.
@@ -54,7 +55,13 @@
 - Escolher o terreno inicial não consome dados no centro. Sortear consome dois. Cada célula seguinte consome dois, mais dois se o resultado for 12.
 - A semente alimenta FNV-1a sobre unidades UTF-16: estado inicial 2166136261, XOR com cada unidade e multiplicação inteira de 32 bits por 16777619.
 - O estado alimenta Mulberry32. Cada sorteio avança 0x6d2b79f5 e converte o valor sem sinal para d6 com `1 + floor(valor / 2^32 * 6)`. As operações completas ficam em `seededDie`.
-- `terrain-v1` identifica tabelas, gerador de dados, centro e ordem de visita. Mudar qualquer um exige nova versão.
+- `region-v2` conserva os terrenos de `terrain-v1` e acrescenta perigo e base central. Mudanças no contrato exigem nova versão.
+- O perigo usa um fluxo separado de FNV-1a + Mulberry32, com a semente original seguida de `\0danger-v1` (separador NUL, não texto digitado). Não consome dados de terreno.
+- Cada hexágono recebe um d6 de perigo na ordem de linha e coluna: 1 seguro, 2–3 inseguro, 4–5 arriscado e 6 mortal.
+- O mapa mostra respectivamente 1, 2, 3 ou 4 unidades do terreno. Essa escolha visual substitui círculo e caveiras da spec, por aprovação do usuário.
+- O centro contém um único povoado chamado Base das Expedições, representado por um vilarejo. O terreno e o perigo do centro continuam gerados normalmente, inclusive em água. Essa base é uma convenção do aplicativo, não uma regra do livro.
+- A consulta mostra o nome do perigo e a base. A impressão inclui a mesma legenda e o vilarejo.
+- Não gera os demais locais do ticket #5 nem uma chave separada. Controles de sigilo ficam no ticket #9.
 - Não há cataclismos nem promessa de clima, costas ou rios contínuos.
 
 ## Imprimir ou salvar PDF
@@ -81,7 +88,7 @@
 - **Sem framework de interface:** uma página com estado local, sem API.
 - `src/grid.ts`: tipos de terreno e geometria em milímetros. A alternativa A fica para regressão geométrica; só B aparece na interface.
 - `src/generation.ts`: tabelas, dados com semente, visita da grade e metadados da região.
-- `src/map-view.ts`: desenha a folha, a legenda ativa e os símbolos próprios.
+- `src/map-view.ts`: desenha a folha, a legenda ativa e os símbolos locais.
 - `src/main.ts`: controla formulário, confirmação, geração, foco e seleção. Mudar o foco não muda a seleção.
 - `src/style.css`: define a apresentação responsiva e as regras de impressão.
 - **Vitest:** verifica geometria, tabelas, probabilidades de 2d6, vizinhança, variantes e repetição por semente.
@@ -104,7 +111,12 @@
 
 ## Arte e dependências
 
-- Os dez símbolos são desenhos originais em `src/map-view.ts`.
+- Floresta, deserto, selva, rio e oceano usam recortes do [Kenney Cartography Pack 1.0](https://kenney.nl/assets/cartography-pack), sob CC0.
+- Os SVG locais ficam em `src/assets/kenney/`. Usam `currentColor`, caixa de 12 × 10 mm e proporções preservadas. O vilarejo usa três casas Kenney em uma caixa de 9 × 7 mm.
+- A licença original acompanha o app em `public/CC0-Kenney-Cartography.txt`. O crédito é voluntário.
+- Pradaria usa capim aberto. Pântano acrescenta água ao capim. Montanha, ártico e litoral também usam desenhos próprios em `src/map-view.ts`.
+- Floresta usa um pinheiro por unidade. Oceano usa uma onda. Rio usa rotação de 90°.
+- A proveniência dos recortes e das transformações está em `src/assets/kenney/README.md`.
 - Nenhum símbolo ou imagem vem das referências privadas ou do livro.
 - A fonte Literata é servida pelo próprio aplicativo via Fontsource.
 - A licença SIL Open Font License 1.1 acompanha a fonte em `public/OFL-Literata.txt`.

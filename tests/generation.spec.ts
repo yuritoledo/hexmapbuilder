@@ -11,7 +11,7 @@ test('gera a grade aprovada com semente, variantes e terreno inicial escolhido',
   await page.getByRole('button', { name: 'Gerar região', exact: true }).click();
   const map = page.getByRole('group', { name: 'Grade B · Compacta' });
   await expect(map.getByRole('button')).toHaveCount(108);
-  const center = map.getByRole('button', { name: 'Hexágono 0506 · Selva', exact: true });
+  const center = map.getByRole('button', { name: /^Hexágono 0506 · Selva ·/ });
   await center.click();
   await expect(page.getByRole('status')).toContainText('Selva');
   await expect(page.locator('#generation-summary')).toContainText('campanha-42');
@@ -65,7 +65,7 @@ test('imprime sementes longas e espaços sem perder a versão nem as margens', a
     await page.getByRole('button', { name: 'Gerar região', exact: true }).click();
     await page.emulateMedia({ media: 'print' });
     const label = page.locator('.map-generation').first();
-    await expect(label).toHaveText(`Semente: ${JSON.stringify(seed)} · terrain-v1`);
+    await expect(label).toHaveText(`Semente: ${JSON.stringify(seed)} · region-v2`);
     const bounds = await label.evaluate(element => {
       const text = element as SVGTextElement;
       const box = text.getBBox();

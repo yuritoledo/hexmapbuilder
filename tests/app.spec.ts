@@ -78,3 +78,42 @@ test('imprime uma página A4 em tamanho real e sem destaque da seleção', async
   expect(dimensions.width * 25.4 / 96).toBeCloseTo(210, 1);
   expect(dimensions.height * 25.4 / 96).toBeCloseTo(297, 1);
 });
+
+
+test('mantém os vetores Kenney dentro dos recortes no mapa e na legenda impressa', async ({ page }) => {
+  await page.goto('/');
+  page.on('dialog', dialog => dialog.accept());
+  for (const forest of ['Floresta', 'Selva']) {
+    await page.getByLabel('Floresta ou selva').selectOption(forest);
+    await page.getByRole('button', { name: 'Gerar região', exact: true }).click();
+    await page.emulateMedia({ media: 'print' });
+    const symbols = page.locator('.terrain-symbol[data-source="kenney"] svg');
+    expect(await symbols.count()).toBeGreaterThan(0);
+    const clipped = await symbols.evaluateAll(elements => elements.flatMap(element => {
+      if (!(element instanceof SVGSVGElement)) return ['não é SVG'];
+      const view = element.viewBox.baseVal;
+      return [...element.querySelectorAll('path')].flatMap(path => {
+        const bounds = path.getBBox();
+        const padding = Number(path.getAttribute('stroke-width')) / 2;
+        const svgMatrix = element.getScreenCTM();
+        const pathMatrix = path.getScreenCTM();
+        if (!svgMatrix || !pathMatrix) return ['sem matriz de transformação'];
+        const matrix = svgMatrix.inverse().multiply(pathMatrix);
+        const corners = [
+          [bounds.x - padding, bounds.y - padding],
+          [bounds.x + bounds.width + padding, bounds.y - padding],
+          [bounds.x - padding, bounds.y + bounds.height + padding],
+          [bounds.x + bounds.width + padding, bounds.y + bounds.height + padding],
+        ];
+        const outside = corners.some(([x, y]) => {
+          const point = new DOMPoint(x, y).matrixTransform(matrix);
+          return point.x < view.x || point.y < view.y ||
+            point.x > view.x + view.width || point.y > view.y + view.height;
+        });
+        return outside ? [path.getAttribute('d')] : [];
+      });
+    }));
+    expect(clipped).toEqual([]);
+    await page.emulateMedia({ media: 'screen' });
+  }
+});

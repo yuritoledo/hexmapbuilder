@@ -31,7 +31,7 @@ web
 ## Capabilities and Constraints
 
 - Fonte de requisitos: issues #1, #2, #3 e #4 de yuritoledo/hexmapbuilder.
-- A geração usa tabelas 2d6 e versão terrain-v1. Não promete clima ou hidrografia contínua.
+- A geração usa tabelas 2d6 e versão region-v2, com perigo por d6 e vilarejo central. Não promete clima ou hidrografia contínua.
 - O usuário escolhe B Compacta em 2026-11-09: 9 × 12, ponta para cima, A4 retrato e margens mínimas de 12 mm.
 - Cada hexágono representa 10 km; a base explicita a distância entre lados opostos.
 - Sem contas, nuvem ou uso de imagens privadas de referência.
@@ -39,10 +39,10 @@ web
 ## Brand Commitments
 
 - Português brasileiro, fundo branco, traço artesanal e grade pontilhada.
-- Arte própria e legível em preto e branco.
+- Arte própria e recortes Kenney CC0, legíveis em preto e branco.
 
 ## Accessibility & Inclusion
 
 - Seleção por mouse e teclado.
-- Coordenadas e terrenos têm nomes acessíveis.
+- Coordenadas, terrenos, perigo e base têm nomes acessíveis.
 - A seleção não depende somente de cor.
