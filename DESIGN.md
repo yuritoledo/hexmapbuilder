@@ -1,0 +1,82 @@
+---
+name: Hexmap Builder
+description: Comparação de mapas hexagonais monocromáticos para impressão.
+colors:
+  ink: "#252720"
+  muted: "#5b5e53"
+  line: "#d4d7cb"
+  canvas: "#f2f3ee"
+  paper: "#ffffff"
+rounded:
+  control: "3px"
+---
+
+## Overview
+
+- A folha branca é o objeto principal da interface.
+- A apresentação usa uma referência editorial: título serifado, legenda compacta e controles simples.
+- O ticket #3 define o aspecto monocromático e os símbolos próprios.
+- A implementação escolhe a tipografia e a organização da tela. Essas escolhas não indicam aprovação final do usuário.
+- Densidade, orientação dos hexágonos e margens permanecem provisórias.
+
+## Colors
+
+- Use ink para texto e símbolos.
+- Use muted para instruções secundárias.
+- Use line para separar grupos de controles.
+- Use canvas apenas fora das folhas.
+- Conserve o papel branco na tela e na impressão.
+- A seleção usa preenchimento #e8ebdf e contorno sólido. O foco usa contorno tracejado mais espesso.
+- Não dependa apenas da cor para distinguir seleção e foco.
+
+## Typography
+
+- Use Literata Variable, Georgia, serif nos títulos, coordenadas e números de seleção.
+- Use Helvetica Neue, Helvetica, Arial, sans-serif nos controles e instruções.
+- O título principal usa peso 450 e tamanho clamp(1.7rem, 3vw, 2.6rem).
+- Os controles usam 14px. O texto secundário usa 12–15px conforme o contexto.
+- As coordenadas da folha usam 2.5 unidades SVG, equivalentes a 2.5mm na impressão.
+- Sirva a Literata localmente e mantenha sua licença.
+
+## Layout
+
+- A tela larga mostra duas folhas e um painel de consulta de 238px à direita.
+- Até 1100px, as folhas ficam empilhadas e o painel mede 210px.
+- Até 650px, o painel vem antes das folhas e deixa de ser fixo.
+- A seleção móvel traz o painel para a área visível.
+- O conteúdo principal tem largura máxima de 1800px.
+- Cada folha tem viewBox 0 0 210 297 e usa milímetros na impressão.
+- Cada alternativa ocupa uma página A4 retrato. O conteúdo fica a pelo menos 12mm das bordas.
+- A impressão remove os controles e os destaques interativos.
+
+## Elevation & Depth
+
+- Apenas o papel recebe sombra: 0 3px 12px #25272010.
+- Remova a sombra na impressão.
+- Não use superfícies elevadas para cada grupo do painel.
+
+## Shapes
+
+- Os hexágonos são regulares, com ponta para cima e linhas alternadas deslocadas.
+- A grade usa contorno pontilhado de 0.3mm na impressão.
+- Os símbolos usam traço próprio, sem preenchimento e com extremidades arredondadas.
+- O botão principal tem raio de 3px. As folhas têm cantos retos.
+
+## Components
+
+- Botão de impressão: fundo escuro, texto branco, altura mínima de 48px e ícone SVG próprio.
+- Painel de consulta: estado vazio explícito; depois, coordenada, terreno, alternativa e escala.
+- Hexágono: botão SVG com nome acessível, foco móvel por teclado e aria-pressed para seleção.
+- Legenda: sete símbolos e seus nomes em cada página.
+- Linha de conferência: 50mm em cada página.
+- Instruções de impressão: conteúdo recolhível, fora da folha.
+
+## Do's and Don'ts
+
+- Mantenha as coordenadas e a legenda legíveis no tamanho real.
+- Diferencie terreno por símbolo, não por cor.
+- Mantenha a navegação de foco separada da seleção.
+- Preserve o estado vazio e as instruções de teclado.
+- Não copie imagens ou símbolos das referências privadas.
+- Não adicione efeitos decorativos, animação ou cores à folha.
+- Não trate esta amostra fixa como geração procedural.
