@@ -39,12 +39,13 @@ export function cellSymbol(cell: HexCell, x: number, y: number): string {
         [[-3, -2.5], [3, -2.5], [-3, 2.5], [3, 2.5]];
   const symbols = positions.slice(0, cell.danger).map(([dx, dy]) =>
     `<g data-biome-unit="${cell.terrain}">${terrainSymbol(cell.terrain, dx!, dy!, cell.expeditionBase ? 0.32 : 0.5)}</g>`).join('');
-  return `<g transform="translate(${x} ${y})">${symbols}${cell.expeditionBase ? `<g class="terrain-symbol" data-expedition-base="vilarejo">${village}</g>` : ''}</g>`;
+  const local = cell.local ? '<path class="terrain-symbol" data-local="true" d="M0-8.2 1.2-7 0-5.8-1.2-7Z" />' : '';
+  return `<g transform="translate(${x} ${y})">${symbols}${local}${cell.expeditionBase ? `<g class="terrain-symbol" data-expedition-base="vilarejo">${village}</g>` : ''}</g>`;
 }
 function hexMarkup(cell: HexCell, index: number): string {
   const points = cell.corners.map(point => `${point.x},${point.y}`).join(' ');
   return `<g class="hex" role="button" tabindex="${index === 0 ? 0 : -1}" aria-pressed="false"
-      aria-label="Hexágono ${cell.coordinate} · ${cell.terrain} · ${dangerNames[cell.danger]} (${cell.danger})${cell.expeditionBase ? ` · Vilarejo, ${escapeAttribute(cell.expeditionBase.name)}` : ''}" data-index="${index}" data-danger="${cell.danger}">
+      aria-label="Hexágono ${cell.coordinate} · ${cell.terrain} · ${dangerNames[cell.danger]} (${cell.danger})${cell.expeditionBase ? ` · Vilarejo, ${escapeAttribute(cell.expeditionBase.name)}` : ''} · ${escapeAttribute(cell.local ? `${cell.local.category} · ${cell.local.name}` : 'Sem local')}" data-index="${index}" data-danger="${cell.danger}">
     <polygon class="hex-boundary" points="${points}" />
     ${cellSymbol(cell, cell.center.x, cell.center.y - 1)}
     <text class="coordinate" x="${cell.center.x}" y="${cell.center.y + 6}">${cell.coordinate}</text>
@@ -103,4 +104,32 @@ export function mapSheet(container: HTMLElement, region: GeneratedRegion): void 
   optionsLabel.setAttribute('class', 'map-generation');
   optionsLabel.textContent = generationOptionsLabel(options);
   svg.append(optionsLabel);
+}
+
+export function regionKey(container: HTMLElement, region: GeneratedRegion): void {
+  container.innerHTML = `<details class="region-key">
+    <summary>Chave de quem mestra</summary>
+    <p>Losango: local opcional. Vilarejo: Base das Expedições permanente.</p>
+    <div class="key-scroll" role="region" aria-label="Tabela da chave" tabindex="0">
+      <table aria-label="Hexágonos da região">
+        <thead><tr><th scope="col">Coordenada</th><th scope="col">Terreno</th><th scope="col">Local / base</th><th scope="col">Perigo</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </details>`;
+  const body = container.querySelector('tbody')!;
+  for (const cell of region.cells) {
+    const row = document.createElement('tr');
+    const local = cell.local ? `${cell.local.category} · ${cell.local.name}` : 'Sem local';
+    const values = [cell.coordinate, cell.terrain,
+      `${local}${cell.expeditionBase ? `; ${cell.expeditionBase.name} (base permanente)` : ''}`,
+      `${dangerNames[cell.danger]} (${cell.danger})`];
+    values.forEach((value, index) => {
+      const field = document.createElement(index === 0 ? 'th' : 'td');
+      if (index === 0) field.setAttribute('scope', 'row');
+      field.textContent = value;
+      row.append(field);
+    });
+    body.append(row);
+  }
 }

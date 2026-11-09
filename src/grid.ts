@@ -22,9 +22,13 @@ export interface HexGeometry {
 }
 export type Danger = 1 | 2 | 3 | 4;
 export const dangerNames: Record<Danger, string> = { 1: 'Seguro', 2: 'Inseguro', 3: 'Arriscado', 4: 'Mortal' };
+export const localCategories = ['povoado', 'masmorra', 'ruína', 'covil', 'santuário', 'marco'] as const;
+export type LocalCategory = (typeof localCategories)[number];
+export interface Local { name: string; category: LocalCategory }
 export interface HexCell extends HexGeometry {
   terrain: Terrain;
   danger: Danger;
+  local?: Local;
   expeditionBase?: { name: string; category: 'povoado' };
 }
 export function createGrid(density: Density): HexGeometry[] {
