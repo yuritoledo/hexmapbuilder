@@ -2,9 +2,9 @@
 
 - Gerador de mapas hexagonais OSR para preparar e imprimir aventuras.
 - Preto e branco, traço artesanal e interface em português brasileiro.
-- Estado atual: comparação executável do [ticket #3](https://github.com/yuritoledo/hexmapbuilder/issues/3).
-- Os terrenos são uma amostra fixa. Geração, edição e salvamento ainda não existem.
-- O ticket #3 permanece aberto até o usuário escolher densidade, orientação e margens.
+- Estado atual: geração de terrenos por semente do [ticket #4](https://github.com/yuritoledo/hexmapbuilder/issues/4).
+- A grade B foi aprovada: 108 hexágonos, ponta para cima e margens mínimas de 12 mm.
+- Locais, perigo, edição e salvamento entram nos próximos tickets.
 
 ## Executar
 
@@ -16,51 +16,75 @@
 - Consulte a versão estática: `npm run preview`.
 - O diretório `dist/` não exige servidor de aplicação nem API.
 
-## Comparar as grades
+## Gerar uma região
 
-| Alternativa | Colunas × linhas | Hexágonos | Distância entre lados no papel |
-| --- | --- | --- | --- |
-| A · Ampla | 7 × 9 | 63 | 24 mm |
-| B · Compacta | 9 × 12 | 108 | 19 mm |
-
-- As duas folhas usam A4 retrato, hexágonos regulares com ponta para cima e conteúdo a pelo menos 12 mm das bordas.
+- Informe uma semente de 1 a 80 caracteres. Maiúsculas, acentos e espaços fazem parte dela.
+- Escolha o terreno central ou **Sortear com 2d6**.
+- Escolha as variantes do mapa: Deserto/Ártico, Floresta/Selva e Rio/Litoral.
+- Selecione **Gerar região** e confirme a substituição do mapa atual.
+- Cancelar conserva o mapa, os metadados e a seleção. Os campos continuam com os valores digitados.
+- Os campos são opções para a próxima geração. O resumo e a folha mostram o mapa atual.
+- A abertura gera `terras-01` com as opções padrão. Recarregar perde o mapa atual.
+- A mesma semente, opções, grade e versão produzem a mesma região.
+- A grade aprovada tem 9 colunas × 12 linhas, 108 hexágonos e 19 mm entre lados no papel.
+- A folha usa A4 retrato, hexágonos regulares com ponta para cima e conteúdo a pelo menos 12 mm das bordas.
 - As coordenadas usam coluna seguida de linha, com dois dígitos para cada uma: `0301` significa coluna 03, linha 01.
-- Cada grade tem coordenadas únicas. As alternativas usam o mesmo sistema de coordenadas.
+- As coordenadas são únicas dentro da região.
 - **10 km é a distância entre lados opostos de um hexágono**, não entre vértices.
 - Essa distância também corresponde à distância entre centros de hexágonos vizinhos.
 - Clique em um hexágono para consultar terreno e coordenada.
 - Tab entra em cada grade. As setas movem o foco por coluna ou linha, sem dar a volta nas bordas.
 - Enter ou Espaço seleciona. Home e End movem para o início e fim da linha.
-- Apenas um hexágono fica selecionado entre as duas grades.
+- Apenas um hexágono fica selecionado.
 - No celular, a seleção traz o painel de consulta para a tela.
-- Não há escolha definitiva de grade nesta interface. Compare primeiro no papel.
+
+## Contrato de geração: terrain-v1
+
+- Esta é uma adaptação em lote das tabelas da spec. Não simula exploração progressiva.
+- A tabela inicial usa dois d6: 2 Deserto/Ártico; 3 Pântano; 4–6 Pradaria; 7–8 Floresta/Selva; 9–10 Rio/Litoral; 11 Oceano; 12 Montanha.
+- O ciclo tem **sete posições**, nesta ordem: Deserto/Ártico → Pântano → Pradaria → Floresta/Selva → Rio/Litoral → Oceano → Montanha → início.
+- Cada transição rola dois d6: 2–3 avança uma posição; 4–8 conserva; 9–11 avança duas; 12 rola novamente a tabela inicial com dois d6 extras.
+- A transição percorre posições do ciclo, não os onze resultados possíveis da soma.
+- As variantes mudam nomes e símbolos da posição, não as probabilidades.
+- Coordenadas internas começam em zero. Linhas ímpares ficam deslocadas meio hexágono à direita.
+- O centro usa coluna `floor((colunas - 1) / 2)` e linha `floor((linhas - 1) / 2)`. Em dimensões pares, escolhe o centro superior/esquerdo. Em B, a coordenada é **0506**.
+- A visita usa uma fila por camadas a partir do centro. Para cada referência, ordena seus seis vizinhos válidos por linha e depois por coluna.
+- O primeiro vizinho gerado que descobre uma célula fornece a referência. A célula recebe terreno e entra na fila imediatamente. Outros vizinhos não a sorteiam novamente.
+- A saída conserva a ordem por linha e coluna, independentemente da ordem de visita.
+- Escolher o terreno inicial não consome dados no centro. Sortear consome dois. Cada célula seguinte consome dois, mais dois se o resultado for 12.
+- A semente alimenta FNV-1a sobre unidades UTF-16: estado inicial 2166136261, XOR com cada unidade e multiplicação inteira de 32 bits por 16777619.
+- O estado alimenta Mulberry32. Cada sorteio avança 0x6d2b79f5 e converte o valor sem sinal para d6 com `1 + floor(valor / 2^32 * 6)`. As operações completas ficam em `seededDie`.
+- `terrain-v1` identifica tabelas, gerador de dados, centro e ordem de visita. Mudar qualquer um exige nova versão.
+- Não há cataclismos nem promessa de clima, costas ou rios contínuos.
 
 ## Imprimir ou salvar PDF
 
-1. Selecione **Imprimir comparação**.
+1. Selecione **Imprimir mapa**.
 2. Use papel **A4**, orientação **retrato** e escala **100%**.
 3. Desative margens adicionais, cabeçalhos e rodapés do navegador.
 4. Imprima ou selecione **Salvar como PDF**.
-5. Confira as duas páginas. A linha de conferência em cada página deve medir **50 mm**.
-6. Compare a leitura das coordenadas, dos símbolos e da legenda no tamanho real.
+5. Confira a página. A linha de conferência deve medir **50 mm**.
 
-- O CSS usa milímetros e uma página por alternativa. Não dimensiona a folha a partir de uma captura de tela.
+- O CSS usa milímetros e uma página A4. Não dimensiona a folha a partir de uma captura de tela.
+- A folha inclui semente, versão, terreno inicial e variantes para repetir a geração.
+- A semente aparece entre aspas no formato JSON, com espaços preservados e caracteres especiais escapados. As aspas externas não fazem parte da semente.
+- Sementes largas recebem ajuste horizontal de texto para respeitar os 12 mm de margem.
 - Controles, painel e destaque de seleção não aparecem na impressão.
-- O teste automatizado verifica duas páginas A4 no PDF do Chromium.
+- O teste automatizado verifica uma página A4 no PDF do Chromium.
 - O teste não substitui a conferência física da impressora. Outros navegadores e impressoras precisam de conferência.
-- **Decisão pendente:** registre no ticket #3 a densidade, a orientação dos hexágonos e as margens escolhidas antes de encerrá-lo.
 
 ## Arquitetura e ferramentas
 
 - **TypeScript estrito:** define os dados e detecta erros de tipos.
 - **Vite:** inicia o servidor local e gera os arquivos estáticos.
 - **SVG:** conserva a geometria e o traço na tela e no PDF.
-- **Sem framework de interface:** esta etapa tem uma página e estado de seleção local.
-- `src/grid.ts`: define terrenos, alternativas e geometria em milímetros.
-- `src/map-view.ts`: desenha as folhas, a legenda e os símbolos próprios.
-- `src/main.ts`: monta a interface e controla foco e seleção. Mudar o foco não muda a seleção.
+- **Sem framework de interface:** uma página com estado local, sem API.
+- `src/grid.ts`: tipos de terreno e geometria em milímetros. A alternativa A fica para regressão geométrica; só B aparece na interface.
+- `src/generation.ts`: tabelas, dados com semente, visita da grade e metadados da região.
+- `src/map-view.ts`: desenha a folha, a legenda ativa e os símbolos próprios.
+- `src/main.ts`: controla formulário, confirmação, geração, foco e seleção. Mudar o foco não muda a seleção.
 - `src/style.css`: define a apresentação responsiva e as regras de impressão.
-- **Vitest:** verifica quantidade, coordenadas, geometria regular e limites das folhas.
+- **Vitest:** verifica geometria, tabelas, probabilidades de 2d6, vizinhança, variantes e repetição por semente.
 - **Playwright + Chromium:** verifica abertura, mouse, teclado, consulta móvel e PDF.
 - **pdf-lib:** lê as dimensões e a quantidade de páginas do PDF nos testes. Não integra o aplicativo.
 - **ESLint:** verifica os arquivos JavaScript e TypeScript.
@@ -80,7 +104,7 @@
 
 ## Arte e dependências
 
-- Os sete símbolos são desenhos originais em `src/map-view.ts`.
+- Os dez símbolos são desenhos originais em `src/map-view.ts`.
 - Nenhum símbolo ou imagem vem das referências privadas ou do livro.
 - A fonte Literata é servida pelo próprio aplicativo via Fontsource.
 - A licença SIL Open Font License 1.1 acompanha a fonte em `public/OFL-Literata.txt`.
@@ -97,7 +121,6 @@
 
 ## Próximos tickets
 
-- [Terrenos por semente](https://github.com/yuritoledo/hexmapbuilder/issues/4)
 - [Locais e perigo](https://github.com/yuritoledo/hexmapbuilder/issues/5)
 - [Edição e histórico](https://github.com/yuritoledo/hexmapbuilder/issues/6)
 - [Salvar e importar](https://github.com/yuritoledo/hexmapbuilder/issues/7)

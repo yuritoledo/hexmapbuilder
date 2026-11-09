@@ -1,4 +1,4 @@
-export const terrains = ['Pradaria', 'Floresta', 'Montanha', 'Pântano', 'Deserto', 'Rio', 'Oceano'] as const;
+export const terrains = ['Pradaria', 'Floresta', 'Montanha', 'Pântano', 'Deserto', 'Rio', 'Oceano', 'Ártico', 'Selva', 'Litoral'] as const;
 export type Terrain = (typeof terrains)[number];
 export type DensityId = 'ampla' | 'compacta';
 export interface Density {
@@ -13,16 +13,16 @@ export const densities: Record<DensityId, Density> = {
   compacta: { id: 'compacta', label: 'B · Compacta', columns: 9, rows: 12, width: 19 },
 };
 export interface Point { x: number; y: number }
-export interface HexCell {
+export interface HexGeometry {
   coordinate: string;
   row: number;
   column: number;
-  terrain: Terrain;
   center: Point;
   corners: Point[];
 }
-export function createGrid(density: Density): HexCell[] {
-  const cells: HexCell[] = [];
+export interface HexCell extends HexGeometry { terrain: Terrain }
+export function createGrid(density: Density): HexGeometry[] {
+  const cells: HexGeometry[] = [];
   const radius = density.width / Math.sqrt(3);
   const gridWidth = (density.columns + 0.5) * density.width;
   const gridHeight = (1.5 * density.rows + 0.5) * radius;
@@ -37,7 +37,6 @@ export function createGrid(density: Density): HexCell[] {
       cells.push({
         coordinate: `${String(column + 1).padStart(2, '0')}${String(row + 1).padStart(2, '0')}`,
         row, column,
-        terrain: terrains[(row * 3 + Math.floor(column / 2)) % terrains.length]!,
         center,
         corners: Array.from({ length: 6 }, (_, index) => {
           const angle = (index * 60 - 90) * Math.PI / 180;

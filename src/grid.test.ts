@@ -8,7 +8,6 @@ describe('grades para comparação A4', () => {
     expect(new Set(cells.map(cell => cell.coordinate)).size).toBe(count);
     expect(cells[0]?.coordinate).toBe('0101');
     expect(cells.at(-1)?.coordinate).toBe(id === 'ampla' ? '0709' : '0912');
-    expect(cells.every(cell => cell.terrain.length > 0)).toBe(true);
   });
 
   it.each(['ampla', 'compacta'] as const)('desenha hexágonos regulares em %s dentro da área útil A4', id => {

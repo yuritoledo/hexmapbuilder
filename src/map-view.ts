@@ -1,4 +1,5 @@
-import { createGrid, terrains, type Density, type HexCell, type Terrain } from './grid';
+import type { HexCell, Terrain } from './grid';
+import { terrainNames, type GeneratedRegion, type GenerationOptions } from './generation';
 
 // Desenhos originais deste projeto. Nenhum símbolo vem da referência privada.
 const terrainPaths: Record<Terrain, string> = {
@@ -9,6 +10,9 @@ const terrainPaths: Record<Terrain, string> = {
   Deserto: 'M-5 3q3-5 6-1t4 0M-3 4q3-2 6 0M-3-3h.1m6 2h.1',
   Rio: 'M-4-4q6 1 3 4t3 4M-1-4q6 1 3 4t3 4',
   Oceano: 'M-5-2q1-2 3 0t3 0 3 0M-5 1q1-2 3 0t3 0 3 0M-5 4q1-2 3 0t3 0 3 0',
+  Ártico: 'M-4 3l2-4 2 4 2-6 3 6M-2-1v-3m-1 1 2 1M2-3l1-2 2 2M-4 4h9',
+  Selva: 'M-4 0q-2-4 1-4 2-2 3 0 4-1 4 2 2 3-2 3h-6M-1 1v3m-2 0h5',
+  Litoral: 'M-4-4q4 3 1 6l-1 2M0-1q1-2 3 0t3 0M0 2q1-2 3 0t3 0',
 };
 
 export function terrainSymbol(terrain: Terrain, x: number, y: number, scale = 1): string {
@@ -25,9 +29,15 @@ function hexMarkup(cell: HexCell, index: number): string {
   </g>`;
 }
 
-export function mapSheet(density: Density): string {
-  const cells = createGrid(density);
-  return `<section class="comparison" aria-labelledby="heading-${density.id}" data-density="${density.id}">
+export function generationOptionsLabel(options: GenerationOptions): string {
+  const names = terrainNames(options);
+  const initial = options.initialTerrain === 'random' ? '2d6' : names[options.initialTerrain];
+  return `Inicial: ${initial} · ${options.arid} / ${options.forest} / ${options.water}`;
+}
+
+export function mapSheet(container: HTMLElement, region: GeneratedRegion): void {
+  const { density, cells, options } = region;
+  container.innerHTML = `<section class="comparison" aria-labelledby="heading-${density.id}" data-density="${density.id}">
     <header class="sheet-heading">
       <h2 id="heading-${density.id}">${density.label}</h2>
       <p>${cells.length} hexágonos <span aria-hidden="true">·</span> ${density.columns} × ${density.rows}</p>
@@ -40,7 +50,7 @@ export function mapSheet(density: Density): string {
         <path class="rule" d="M12 34H198" />
         <g class="cells">${cells.map(hexMarkup).join('')}</g>
         <g class="legend" aria-label="Legenda de terrenos">
-          ${terrains.map((terrain, index) => {
+          ${Object.values(terrainNames(options)).map((terrain, index) => {
             const x = 21 + index * 28;
             return `${terrainSymbol(terrain, x, 259, 0.62)}<text x="${x}" y="267">${terrain}</text>`;
           }).join('')}
@@ -53,4 +63,21 @@ export function mapSheet(density: Density): string {
     </div>
     <p class="sheet-caption">${density.width} mm entre lados · ponta para cima · margens mínimas de 12 mm</p>
   </section>`;
+  const svg = container.querySelector('svg')!;
+  const seedLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  seedLabel.setAttribute('x', '12');
+  seedLabel.setAttribute('y', '38');
+  seedLabel.setAttribute('class', 'map-generation');
+  seedLabel.textContent = `Semente: ${JSON.stringify(options.seed)} · ${region.version}`;
+  svg.append(seedLabel);
+  if (seedLabel.getComputedTextLength() > 186) {
+    seedLabel.setAttribute('textLength', '186');
+    seedLabel.setAttribute('lengthAdjust', 'spacingAndGlyphs');
+  }
+  const optionsLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  optionsLabel.setAttribute('x', '12');
+  optionsLabel.setAttribute('y', '43');
+  optionsLabel.setAttribute('class', 'map-generation');
+  optionsLabel.textContent = generationOptionsLabel(options);
+  svg.append(optionsLabel);
 }

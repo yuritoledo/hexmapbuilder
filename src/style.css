@@ -27,8 +27,15 @@ h1 { font: 450 clamp(1.7rem, 3vw, 2.6rem)/1.2 'Literata Variable', Georgia, seri
 .intro p { color: var(--muted); font-size: 15px; line-height: 1.6; margin: 0; max-width: 70ch; }
 .print-button { display: flex; flex: none; align-items: center; gap: 24px; background: var(--ink); color: white; padding: 14px 18px; border: 1px solid var(--ink); border-radius: 3px; font-size: 14px; min-height: 48px; }
 .print-button:hover { background: #41463b; }
-.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 238px; align-items: start; gap: 32px; }
-.sheets { grid-column: 1; grid-row: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; min-width: 0; }
+.generation-controls { display: grid; grid-template-columns: minmax(170px, 1.3fr) repeat(4, minmax(130px, 1fr)) auto; gap: 16px; align-items: end; padding: 20px 0; margin-bottom: 24px; border-block: 1px solid var(--line); }
+.generation-controls label { display: grid; gap: 8px; font-size: 13px; font-weight: 600; min-width: 0; }
+.generation-controls input, .generation-controls select { width: 100%; min-width: 0; min-height: 44px; padding: 10px; font: inherit; font-size: 14px; font-weight: 400; color: var(--ink); background: white; border: 1px solid #767a6e; border-radius: 3px; caret-color: var(--ink); }
+.generate-button { min-height: 44px; padding: 10px 16px; background: var(--ink); color: white; border: 1px solid var(--ink); border-radius: 3px; font-size: 14px; }
+.generate-button:hover { background: #41463b; }
+.generation-summary { grid-column: 1 / -1; margin: 0; font-size: 13px; line-height: 1.6; color: var(--muted); overflow-wrap: anywhere; }
+.map-generation { font-size: 2.2px; white-space: pre; }
+.workspace { display: grid; grid-template-columns: minmax(0, 760px) 238px; justify-content: center; align-items: start; gap: 32px; }
+.sheets { grid-column: 1; grid-row: 1; display: grid; grid-template-columns: minmax(0, 760px); gap: 28px; min-width: 0; }
 .inspector { grid-column: 2; grid-row: 1; font-size: 14px; line-height: 1.6; position: sticky; top: 24px; }
 .inspector section { padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
 .inspector h2 { font-size: 15px; line-height: 1.4; margin: 0 0 16px; }
@@ -70,6 +77,7 @@ summary { font-size: 13px; font-weight: 600; padding: 6px 0; }
 .app-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; border-top: 1px solid var(--line); margin-top: 36px; padding-top: 12px; color: var(--muted); font-size: 12px; line-height: 1.6; }
 .app-footer p { margin: 0; }
 @media (max-width: 1100px) {
+  .generation-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   main { padding: 28px 24px 20px; }
   .app-header { padding: 20px 24px; }
   .workspace { grid-template-columns: minmax(0, 1fr) 210px; gap: 24px; }
@@ -77,6 +85,8 @@ summary { font-size: 13px; font-weight: 600; padding: 6px 0; }
   .sheet-heading { padding-top: 12px; }
 }
 @media (max-width: 650px) {
+  .generation-controls { grid-template-columns: minmax(0, 1fr); }
+  .generation-controls label, .generation-controls input, .generation-controls select { font-size: 16px; }
   main { padding: 24px 16px; }
   .app-header { padding: 16px; }
   .header-note { display: none; }
@@ -94,7 +104,7 @@ summary { font-size: 13px; font-weight: 600; padding: 6px 0; }
 @media print {
   :root, body { background: white; }
   body, main, .workspace, .sheets { display: block; margin: 0; padding: 0; max-width: none; }
-  .app-header, .intro, .inspector, .sheet-heading, .sheet-caption, .app-footer, .skip-link { display: none !important; }
+  .generation-controls, .app-header, .intro, .inspector, .sheet-heading, .sheet-caption, .app-footer, .skip-link { display: none !important; }
   .comparison { width: 210mm; height: 297mm; break-after: page; break-inside: avoid; margin: 0; padding: 0; }
   .comparison:last-child { break-after: auto; }
   .paper { box-shadow: none; }

@@ -1,6 +1,6 @@
 ---
 name: Hexmap Builder
-description: Comparação de mapas hexagonais monocromáticos para impressão.
+description: Geração de mapas hexagonais monocromáticos para impressão.
 colors:
   ink: "#252720"
   muted: "#5b5e53"
@@ -16,8 +16,8 @@ rounded:
 - A folha branca é o objeto principal da interface.
 - A apresentação usa uma referência editorial: título serifado, legenda compacta e controles simples.
 - O ticket #3 define o aspecto monocromático e os símbolos próprios.
-- A implementação escolhe a tipografia e a organização da tela. Essas escolhas não indicam aprovação final do usuário.
-- Densidade, orientação dos hexágonos e margens permanecem provisórias.
+- O usuário aprova a direção visual em 2026-11-09.
+- Grade aprovada: B Compacta, 108 hexágonos, ponta para cima e margens mínimas de 12 mm.
 
 ## Colors
 
@@ -40,13 +40,14 @@ rounded:
 
 ## Layout
 
-- A tela larga mostra duas folhas e um painel de consulta de 238px à direita.
-- Até 1100px, as folhas ficam empilhadas e o painel mede 210px.
-- Até 650px, o painel vem antes das folhas e deixa de ser fixo.
+- A tela larga mostra uma folha de até 760px e um painel de consulta de 238px à direita, separados por 32px.
+- O formulário acima do mapa agrupa semente, terreno inicial, três variantes e ação de gerar.
+- Até 1100px, o formulário usa três colunas e o painel mede 210px.
+- Até 650px, o formulário usa uma coluna. O painel vem antes da folha e deixa de ser fixo.
 - A seleção móvel traz o painel para a área visível.
 - O conteúdo principal tem largura máxima de 1800px.
 - Cada folha tem viewBox 0 0 210 297 e usa milímetros na impressão.
-- Cada alternativa ocupa uma página A4 retrato. O conteúdo fica a pelo menos 12mm das bordas.
+- O mapa ocupa uma página A4 retrato. O conteúdo fica a pelo menos 12mm das bordas.
 - A impressão remove os controles e os destaques interativos.
 
 ## Elevation & Depth
@@ -65,6 +66,9 @@ rounded:
 ## Components
 
 - Botão de impressão: fundo escuro, texto branco, altura mínima de 48px e ícone SVG próprio.
+- Formulário: rótulos visíveis, controles nativos com altura mínima de 44px e fonte de 16px no celular.
+- Gerar região: pede confirmação nativa antes de substituir a folha e limpa a seleção ao confirmar.
+- A folha inclui semente, versão, terreno inicial e variantes.
 - Painel de consulta: estado vazio explícito; depois, coordenada, terreno, alternativa e escala.
 - Hexágono: botão SVG com nome acessível, foco móvel por teclado e aria-pressed para seleção.
 - Legenda: sete símbolos e seus nomes em cada página.
@@ -79,4 +83,4 @@ rounded:
 - Preserve o estado vazio e as instruções de teclado.
 - Não copie imagens ou símbolos das referências privadas.
 - Não adicione efeitos decorativos, animação ou cores à folha.
-- Não trate esta amostra fixa como geração procedural.
+- Mostre os metadados do mapa atual, não os valores ainda não aplicados do formulário.
