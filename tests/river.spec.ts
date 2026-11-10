@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { PDFDocument } from 'pdf-lib';
 
 test('toggles one optional river with keyboard and exact undo/redo without changing hexes', async ({ page }) => {
   await page.goto('/');
@@ -100,4 +101,38 @@ test('edits and rerolls a crossed hex without rerouting or changing its neighbor
   await expect(page.locator('.hex [data-expedition-base]')).toHaveCount(1);
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+});
+
+test('prints the same continuous river under every secrecy setting without changing the screen state', async ({ page }, testInfo) => {
+  await page.goto('/');
+  await page.getByRole('checkbox', { name: 'Rio contínuo (adaptação opcional)', exact: true }).check();
+  const screen = page.locator('#comparison');
+  const before = await screen.innerHTML();
+  const path = await screen.locator('.river-overlay').getAttribute('d');
+  for (const locations of [false, true]) {
+    for (const danger of [false, true]) {
+      await page.emulateMedia({ media: 'screen' });
+      await page.getByRole('checkbox', { name: 'Mostrar locais no mapa impresso', exact: true }).setChecked(locations);
+      await page.getByRole('checkbox', { name: 'Mostrar perigo no mapa impresso', exact: true }).setChecked(danger);
+      await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
+      await page.emulateMedia({ media: 'print' });
+      const map = page.locator('#print-output .map-sheet');
+      await expect(map.locator('.river-overlay')).toHaveAttribute('d', path!);
+      await expect(map.locator('.river-legend')).toContainText('adaptação do aplicativo');
+      await expect(map.locator('[data-expedition-base]')).toHaveCount(locations ? 1 : 0);
+      await expect(map.locator('.danger-legend')).toHaveCount(danger ? 1 : 0);
+      if (!danger) expect(await map.locator('.hex').evaluateAll(hexes =>
+        hexes.every(hex => hex.querySelectorAll('[data-biome-unit]').length === 1))).toBe(true);
+      await expect(page.locator('#print-output .print-key')).toContainText('Base das Expedições');
+      expect(await screen.innerHTML()).toBe(before);
+      const pdf = await PDFDocument.load(await page.pdf({ path: testInfo.outputPath(`river-${locations}-${danger}.pdf`), preferCSSPageSize: true }));
+      expect(pdf.getPageCount()).toBeGreaterThan(1);
+      for (const sheet of pdf.getPages()) {
+        expect(sheet.getWidth() * 25.4 / 72).toBeCloseTo(210, 0);
+        expect(sheet.getHeight() * 25.4 / 72).toBeCloseTo(297, 0);
+      }
+      await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+      await expect(page.locator('#print-output')).toHaveCount(0);
+    }
+  }
 });
