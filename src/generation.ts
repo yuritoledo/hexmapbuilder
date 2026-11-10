@@ -1,4 +1,4 @@
-import { createGrid, type Density, type HexCell, type Terrain } from './grid';
+import { createGrid, type Danger, type Density, type HexCell, type Terrain } from './grid';
 import { generateLocal } from './locals';
 export const terrainPositions = ['arid', 'swamp', 'grassland', 'forest', 'water', 'ocean', 'mountain'] as const;
 export type TerrainPosition = (typeof terrainPositions)[number];
@@ -23,6 +23,9 @@ export function roll2d6(rollDie: () => number): number {
   return rollDie() + rollDie();
 }
 
+export function dangerFromRoll(roll: number): Danger {
+  return roll === 1 ? 1 : roll <= 3 ? 2 : roll <= 5 ? 3 : 4;
+}
 export const GENERATION_VERSION = 'region-v4';
 export interface GenerationOptions {
   seed: string;
@@ -99,7 +102,7 @@ export function generateRegion(
     river: { enabled: false, path: [] },
     cells: cells.map((cell, index) => {
       const roll = rollDanger();
-      const danger = roll === 1 ? 1 : roll <= 3 ? 2 : roll <= 5 ? 3 : 4;
+      const danger = dangerFromRoll(roll);
       return {
         ...cell, terrain: names[positions.get(index)!], danger,
         local: generateLocal(rollLocal),

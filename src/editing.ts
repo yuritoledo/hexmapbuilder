@@ -1,4 +1,4 @@
-import { roll2d6, seededDie, terrainNames, terrainPositions, transitionTerrain, type GeneratedRegion } from './generation';
+import { dangerFromRoll, roll2d6, seededDie, terrainNames, terrainPositions, transitionTerrain, type GeneratedRegion } from './generation';
 import type { Danger, Local, Terrain } from './grid';
 import { generateLocal } from './locals';
 
@@ -31,7 +31,7 @@ export function rerollComponent(
   let edit: CellEdit;
   if (component === 'danger') {
     const roll = rollDie();
-    edit = { component, value: roll === 1 ? 1 : roll <= 3 ? 2 : roll <= 5 ? 3 : 4 };
+    edit = { component, value: dangerFromRoll(roll) };
   } else if (component === 'local') {
     edit = { component, value: generateLocal(rollDie) };
   } else {
