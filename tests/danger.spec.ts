@@ -16,8 +16,8 @@ test('consulta perigo real e a base central no mapa normal, inclusive após gera
   await expect(base).toHaveAccessibleName(/Hexágono 0506.*Base das Expedições/);
   await base.focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('status')).toContainText('Perigo');
-  await expect(page.getByRole('status')).toContainText('Vilarejo · Base das Expedições');
+  await expect(page.locator('#selection')).toContainText('Perigo');
+  await expect(page.locator('#selection')).toContainText('Vilarejo · Base das Expedições');
   page.on('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Gerar região', exact: true }).click();
   expect(await state()).toEqual(first);
