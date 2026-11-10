@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { exportMap } from './helpers/export-map';
 import { PDFDocument } from 'pdf-lib';
 
 test('toggles one optional river with keyboard and exact undo/redo without changing hexes', async ({ page }) => {
@@ -149,12 +150,7 @@ test('persists and transfers the exact river, applied edits and reroll continuat
   for (const component of ['terreno', 'local', 'perigo']) await page.getByRole('button', { name: `Gerar ${component} novamente`, exact: true }).click();
   const originalPath = await page.locator('.river-overlay').getAttribute('d');
   const saved = await page.evaluate(() => localStorage.getItem('hexmapbuilder.current'));
-  const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Exportar mapa', exact: true }).click();
-  const stream = await (await download).createReadStream();
-  const chunks: Buffer[] = [];
-  for await (const chunk of stream) chunks.push(Buffer.from(chunk));
-  const exported = Buffer.concat(chunks).toString('utf8');
+  const exported = await exportMap(page);
   expect(exported).toBe(saved);
   await page.getByLabel('Semente', { exact: true }).fill('rascunho não aplicado');
   await page.getByRole('button', { name: 'Gerar terreno novamente', exact: true }).click();

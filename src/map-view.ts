@@ -67,6 +67,7 @@ function riverMarkup(region: GeneratedRegion): string {
 }
 export function mapSheet(container: HTMLElement, region: GeneratedRegion): void {
   const { density, cells, options } = region;
+  const legendTerrains = [...new Set([...Object.values(terrainNames(options)), ...cells.map(cell => cell.terrain)])];
   container.innerHTML = `<section class="comparison" aria-labelledby="heading-${density.id}" data-density="${density.id}">
     <header class="sheet-heading">
       <h2 id="heading-${density.id}">${density.label}</h2>
@@ -81,8 +82,8 @@ export function mapSheet(container: HTMLElement, region: GeneratedRegion): void 
         <g class="cells">${cells.map(hexMarkup).join('')}</g>
         ${riverMarkup(region)}
         <g class="legend" aria-label="Legenda de terrenos">
-          ${Object.values(terrainNames(options)).map((terrain, index) => {
-            const x = 21 + index * 28;
+          ${legendTerrains.map((terrain, index) => {
+            const x = 21 + index * 168 / (legendTerrains.length - 1);
             return `${terrainSymbol(terrain, x, 259, 0.62)}<text x="${x}" y="267">${terrain}</text>`;
           }).join('')}
         </g>

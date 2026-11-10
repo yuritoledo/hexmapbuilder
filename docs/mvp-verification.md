@@ -3,7 +3,7 @@
 - Data: 10-11-2026.
 - Base integrada: `a83fd6f0b4136c25666b5649f539d45d972c94f0`.
 - Ambiente: Node.js `v26.10.0`, Playwright com Chromium, servidor local na porta 4191.
-- Esta entrega acrescenta testes e documentação. Não altera código de aplicação nem o desenho aprovado.
+- O ticket #10 acrescenta testes e documentação, sem alterar código de aplicação nem o desenho aprovado. A seção final registra as correções posteriores à revisão.
 - O [README](../README.md) descreve instalação, uso local, edição, arquivos, impressão e contratos de geração.
 
 ## Critérios e evidências
@@ -72,3 +72,24 @@
 - Não foram testados Firefox, Safari, dispositivos móveis físicos ou leitores de tela reais. A evidência móvel usa viewport Chromium de 390 px.
 - A validação automática e visual não substitui uma auditoria completa de acessibilidade.
 - Revisão final e execução unitária completa pertencem ao coordenador da integração. Esta entrega não publica, não abre PR e não altera o tracker.
+
+## Correções da revisão final — 10-11-2026
+
+- Base integrada: `9829e230806e2825959c8575e33610d30b1d21dd`. `git merge integration/spec-2-mvp` informa que já está atualizado; ancestralidade confirmada.
+- Ambiente desta verificação: Chromium, `http://127.0.0.1:4192`, sem usar as portas 4173 ou 4190.
+- Legenda: mantém os sete terrenos das opções aplicadas e acrescenta as variantes presentes nas células. Os dez terrenos continuam disponíveis para edição.
+- `tests/legend.spec.ts` acrescenta dois casos observáveis, para tela e impressão. Cada caso edita dez células pelos controles, confirma dez rótulos e símbolos, mede margens mínimas de 12 mm e verifica ausência de sobreposição ou corte.
+- RED: `PLAYWRIGHT_PORT=4192 npm run test:e2e -- tests/legend.spec.ts --reporter=line` falha nos dois casos: esperava dez rótulos, recebeu sete; faltavam Ártico, Selva e Litoral. Registro: `/tmp/hexmap-final-red.log`.
+- GREEN: o mesmo comando passa nos dois casos após a correção. Registro: `/tmp/hexmap-final-green.log`.
+- PDF misto: mantém cinco páginas, como o mapa inicial com chave completa. Todas medem 210 × 297 mm. Arquivo: `test-results/legend-mixed-edited-terrai-a69ff-t-legend-on-the-same-A4-map/mixed-terrains-a4.pdf`.
+- Inspeção visual das capturas: os dez rótulos e símbolos ficam separados, entre a grade e as notas, sem corte. A página móvel não tem transbordamento horizontal; o mapa reduz para caber, como antes.
+- Capturas de tela: `/tmp/hexmap-final-legend-1440.png`, `/tmp/hexmap-final-legend-390.png`, `/tmp/hexmap-final-map-1440.png`, `/tmp/hexmap-final-map-390.png`.
+- Captura de impressão: `/tmp/hexmap-final-legend-print.png`, antes de o evento `afterprint` remover a projeção temporária.
+- `DESIGN.md` agora exige a régua de 50 mm somente no mapa e descreve a chave completa em páginas A4 separadas, os controles independentes de sigilo e as variantes da legenda.
+- A geração e o sorteio individual compartilham `dangerFromRoll`. Os seis limites de d6 permanecem cobertos nos dois chamadores; streams, versão, contadores e probabilidades não mudam.
+- `npx vitest run src/generation.test.ts src/editing.test.ts` — 41 testes passam antes e depois da extração.
+- Os testes de integração, persistência e rio compartilham `tests/helpers/export-map.ts` para baixar e decodificar UTF-8. As verificações de arquivos e fluxos permanecem nos chamadores.
+- `npm test` (`vitest run --changed`) — 117 testes passam em sete arquivos. Não é uma execução da suíte unitária completa; essa execução permanece reservada ao coordenador.
+- `PLAYWRIGHT_PORT=4192 npm run test:e2e -- --reporter=line` — todos os 111 testes de navegador passam, incluindo os dois casos novos. Registro: `/tmp/hexmap-final-browser.log`.
+- `npm run typecheck`, `npm run lint`, `npm run build` e `git diff --check` — passam.
+- As cinco observações aceitas estão corrigidas. As limitações de validação física e de navegadores descritas acima permanecem.
