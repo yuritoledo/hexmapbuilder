@@ -30,8 +30,8 @@ web
 
 ## Capabilities and Constraints
 
-- Fonte de requisitos: issues #1, #2, #3 e #4 de yuritoledo/hexmapbuilder.
-- A geração usa tabelas 2d6 e versão region-v2, com perigo por d6 e vilarejo central. Não promete clima ou hidrografia contínua.
+- Fonte de requisitos: issues #1, #2, #3, #4 e #5 de yuritoledo/hexmapbuilder.
+- A geração usa tabelas 2d6 e versão region-v4. Perigo, locais e rio opcional usam fluxos independentes. A base central é permanente. O rio contínuo de norte a sul é uma adaptação do aplicativo, sem promessa de clima ou hidrografia coerente.
 - O usuário escolhe B Compacta em 2026-11-09: 9 × 12, ponta para cima, A4 retrato e margens mínimas de 12 mm.
 - Cada hexágono representa 10 km; a base explicita a distância entre lados opostos.
 - Sem contas, nuvem ou uso de imagens privadas de referência.
@@ -44,5 +44,5 @@ web
 ## Accessibility & Inclusion
 
 - Seleção por mouse e teclado.
-- Coordenadas, terrenos, perigo e base têm nomes acessíveis.
+- Coordenadas, terrenos, perigo, locais e base têm nomes acessíveis.
 - A seleção não depende somente de cor.

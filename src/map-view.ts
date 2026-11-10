@@ -39,12 +39,13 @@ export function cellSymbol(cell: HexCell, x: number, y: number): string {
         [[-3, -2.5], [3, -2.5], [-3, 2.5], [3, 2.5]];
   const symbols = positions.slice(0, cell.danger).map(([dx, dy]) =>
     `<g data-biome-unit="${cell.terrain}">${terrainSymbol(cell.terrain, dx!, dy!, cell.expeditionBase ? 0.32 : 0.5)}</g>`).join('');
-  return `<g transform="translate(${x} ${y})">${symbols}${cell.expeditionBase ? `<g class="terrain-symbol" data-expedition-base="vilarejo">${village}</g>` : ''}</g>`;
+  const local = cell.local ? '<path class="terrain-symbol" data-local="true" d="M0-8.2 1.2-7 0-5.8-1.2-7Z" />' : '';
+  return `<g transform="translate(${x} ${y})">${symbols}${local}${cell.expeditionBase ? `<g class="terrain-symbol" data-expedition-base="vilarejo">${village}</g>` : ''}</g>`;
 }
 function hexMarkup(cell: HexCell, index: number): string {
   const points = cell.corners.map(point => `${point.x},${point.y}`).join(' ');
   return `<g class="hex" role="button" tabindex="${index === 0 ? 0 : -1}" aria-pressed="false"
-      aria-label="Hexágono ${cell.coordinate} · ${cell.terrain} · ${dangerNames[cell.danger]} (${cell.danger})${cell.expeditionBase ? ` · Vilarejo, ${escapeAttribute(cell.expeditionBase.name)}` : ''}" data-index="${index}" data-danger="${cell.danger}">
+      aria-label="Hexágono ${cell.coordinate} · ${cell.terrain} · ${dangerNames[cell.danger]} (${cell.danger})${cell.expeditionBase ? ` · Vilarejo, ${escapeAttribute(cell.expeditionBase.name)}` : ''} · ${escapeAttribute(cell.local ? `${cell.local.category} · ${cell.local.name}` : 'Sem local')}" data-index="${index}" data-danger="${cell.danger}">
     <polygon class="hex-boundary" points="${points}" />
     ${cellSymbol(cell, cell.center.x, cell.center.y - 1)}
     <text class="coordinate" x="${cell.center.x}" y="${cell.center.y + 6}">${cell.coordinate}</text>
@@ -57,8 +58,16 @@ export function generationOptionsLabel(options: GenerationOptions): string {
   return `Inicial: ${initial} · ${options.arid} / ${options.forest} / ${options.water}`;
 }
 
+function riverMarkup(region: GeneratedRegion): string {
+  if (!region.river.enabled) return '';
+  const route = region.river.path.map(coordinate => region.cells.find(cell => cell.coordinate === coordinate)!);
+  const points = [route[0]!.corners[0]!, ...route.map(cell => cell.center), route.at(-1)!.corners[3]!];
+  const d = points.map((point, index) => `${index === 0 ? 'M' : 'L'}${point.x} ${point.y}`).join(' ');
+  return `<path class="river-overlay" role="img" aria-label="Rio contínuo de norte a sul · adaptação opcional" d="${d}" />`;
+}
 export function mapSheet(container: HTMLElement, region: GeneratedRegion): void {
   const { density, cells, options } = region;
+  const legendTerrains = [...new Set([...Object.values(terrainNames(options)), ...cells.map(cell => cell.terrain)])];
   container.innerHTML = `<section class="comparison" aria-labelledby="heading-${density.id}" data-density="${density.id}">
     <header class="sheet-heading">
       <h2 id="heading-${density.id}">${density.label}</h2>
@@ -71,14 +80,16 @@ export function mapSheet(container: HTMLElement, region: GeneratedRegion): void 
         <text class="map-subtitle" x="12" y="28">GRADE ${density.label.toLocaleUpperCase('pt-BR')} · ${cells.length} HEXÁGONOS · A4</text>
         <path class="rule" d="M12 34H198" />
         <g class="cells">${cells.map(hexMarkup).join('')}</g>
+        ${riverMarkup(region)}
         <g class="legend" aria-label="Legenda de terrenos">
-          ${Object.values(terrainNames(options)).map((terrain, index) => {
-            const x = 21 + index * 28;
+          ${legendTerrains.map((terrain, index) => {
+            const x = 21 + index * 168 / (legendTerrains.length - 1);
             return `${terrainSymbol(terrain, x, 259, 0.62)}<text x="${x}" y="267">${terrain}</text>`;
           }).join('')}
         </g>
         <text class="scale-note danger-legend" x="12" y="272">${Object.entries(dangerNames).map(([level, name]) => `${level}${level === '1' ? ' símbolo' : ''}: ${name}`).join(' · ')} · Vilarejo: base central</text>
         <text class="scale-note" x="12" y="276">10 km entre lados opostos de cada hexágono; também entre centros vizinhos.</text>
+        ${region.river.enabled ? '<text class="scale-note river-legend" x="12" y="280">Linha contínua: rio opcional · adaptação do aplicativo.</text>' : ''}
         <path class="calibration" d="M12 281v3m0-1.5h50m0-1.5v3" />
         <text class="calibration-label" x="65" y="284">50 mm · confira após imprimir</text>
         <text class="folio" x="198" y="284">${density.id === 'ampla' ? 'A' : 'B'}</text>
@@ -103,4 +114,32 @@ export function mapSheet(container: HTMLElement, region: GeneratedRegion): void 
   optionsLabel.setAttribute('class', 'map-generation');
   optionsLabel.textContent = generationOptionsLabel(options);
   svg.append(optionsLabel);
+}
+
+export function regionKey(container: HTMLElement, region: GeneratedRegion): void {
+  container.innerHTML = `<details class="region-key">
+    <summary>Chave de quem mestra</summary>
+    <p>Losango: local opcional. Vilarejo: Base das Expedições permanente.</p>
+    <div class="key-scroll" role="region" aria-label="Tabela da chave" tabindex="0">
+      <table aria-label="Hexágonos da região">
+        <thead><tr><th scope="col">Coordenada</th><th scope="col">Terreno</th><th scope="col">Local / base</th><th scope="col">Perigo</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </details>`;
+  const body = container.querySelector('tbody')!;
+  for (const cell of region.cells) {
+    const row = document.createElement('tr');
+    const local = cell.local ? `${cell.local.category} · ${cell.local.name}` : 'Sem local';
+    const values = [cell.coordinate, cell.terrain,
+      `${local}${cell.expeditionBase ? `; ${cell.expeditionBase.name} (base permanente)` : ''}`,
+      `${dangerNames[cell.danger]} (${cell.danger})`];
+    values.forEach((value, index) => {
+      const field = document.createElement(index === 0 ? 'th' : 'td');
+      if (index === 0) field.setAttribute('scope', 'row');
+      field.textContent = value;
+      row.append(field);
+    });
+    body.append(row);
+  }
 }

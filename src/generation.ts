@@ -1,4 +1,5 @@
-import { createGrid, type Density, type HexCell, type Terrain } from './grid';
+import { createGrid, type Danger, type Density, type HexCell, type Terrain } from './grid';
+import { generateLocal } from './locals';
 export const terrainPositions = ['arid', 'swamp', 'grassland', 'forest', 'water', 'ocean', 'mountain'] as const;
 export type TerrainPosition = (typeof terrainPositions)[number];
 
@@ -22,7 +23,10 @@ export function roll2d6(rollDie: () => number): number {
   return rollDie() + rollDie();
 }
 
-export const GENERATION_VERSION = 'region-v2';
+export function dangerFromRoll(roll: number): Danger {
+  return roll === 1 ? 1 : roll <= 3 ? 2 : roll <= 5 ? 3 : 4;
+}
+export const GENERATION_VERSION = 'region-v4';
 export interface GenerationOptions {
   seed: string;
   initialTerrain: TerrainPosition | 'random';
@@ -44,11 +48,13 @@ export interface GeneratedRegion {
   options: GenerationOptions;
   density: Density;
   centerCoordinate: string;
+  rerolls: { terrain: number; local: number; danger: number };
+  river: { enabled: boolean; path: string[] };
   cells: HexCell[];
 }
 
 // FNV-1a over UTF-16 code units, followed by Mulberry32. This sequence belongs to terrain-v1.
-function seededDie(seed: string): () => number {
+export function seededDie(seed: string): () => number {
   let state = 2166136261;
   for (let index = 0; index < seed.length; index++) {
     state = Math.imul(state ^ seed.charCodeAt(index), 16777619);
@@ -64,6 +70,7 @@ function seededDie(seed: string): () => number {
 export function generateRegion(
   density: Density, options: GenerationOptions, rollDie: () => number = seededDie(options.seed),
   rollDanger: () => number = seededDie(`${options.seed}\0danger-v1`),
+  rollLocal: () => number = seededDie(`${options.seed}\0local-v1`),
 ): GeneratedRegion {
   const cells = createGrid(density);
   const centerIndex = Math.floor((density.rows - 1) / 2) * density.columns + Math.floor((density.columns - 1) / 2);
@@ -91,11 +98,14 @@ export function generateRegion(
   return {
     version: GENERATION_VERSION, options: { ...options }, density: { ...density },
     centerCoordinate: cells[centerIndex]!.coordinate,
+    rerolls: { terrain: 0, local: 0, danger: 0 },
+    river: { enabled: false, path: [] },
     cells: cells.map((cell, index) => {
       const roll = rollDanger();
-      const danger = roll === 1 ? 1 : roll <= 3 ? 2 : roll <= 5 ? 3 : 4;
+      const danger = dangerFromRoll(roll);
       return {
         ...cell, terrain: names[positions.get(index)!], danger,
+        local: generateLocal(rollLocal),
         ...(index === centerIndex ? { expeditionBase: { name: 'Base das Expedições', category: 'povoado' as const } } : {}),
       };
     }),

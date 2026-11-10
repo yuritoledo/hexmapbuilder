@@ -70,11 +70,14 @@ rounded:
 - Formulário: rótulos visíveis, controles nativos com altura mínima de 44px e fonte de 16px no celular.
 - Gerar região: pede confirmação nativa antes de substituir a folha e limpa a seleção ao confirmar.
 - A folha inclui semente, versão, terreno inicial e variantes.
-- Painel de consulta: estado vazio explícito; depois, coordenada, terreno, perigo, base quando presente e escala.
-- Hexágono: botão SVG com nome acessível que inclui terreno, perigo e base; foco móvel por teclado e aria-pressed para seleção.
-- Legenda: sete unidades de terreno, nomes e relação entre contagem e perigo. Um vilarejo indica a base central.
-- Linha de conferência: 50mm em cada página.
+- Painel de consulta: estado vazio explícito; depois, coordenada, terreno, perigo, local opcional, base quando presente e escala.
+- Hexágono: botão SVG com nome acessível que inclui terreno, perigo, local opcional e base; foco móvel por teclado e aria-pressed para seleção.
+- Legenda: sete terrenos das opções aplicadas, mais as variantes presentes nas células editadas, até dez símbolos com nomes. A contagem indica perigo; um vilarejo indica a base central.
+- Linha de conferência: 50mm somente na página do mapa. As páginas da chave usam A4, sem requisito de escala.
 - Instruções de impressão: conteúdo recolhível, fora da folha.
+- Local opcional: losango vazio acima das unidades de terreno, sem mudar a contagem de perigo nem ocultar a base.
+- Chave de quem mestra: tabela recolhível abaixo da folha, com coordenada, terreno, local/base e perigo. A tabela permite rolagem horizontal no celular e imprime completa em páginas A4 separadas, mesmo recolhida na tela.
+- Sigilo na impressão: locais/base e perigo começam ocultos no mapa, com controles independentes. Sem perigo, cada hexágono mostra exatamente uma unidade de terreno e não há legenda de perigo. A chave sempre contém os dados completos e fica com quem mestra.
 
 ## Do's and Don'ts
 

@@ -13,7 +13,7 @@ test('gera a grade aprovada com semente, variantes e terreno inicial escolhido',
   await expect(map.getByRole('button')).toHaveCount(108);
   const center = map.getByRole('button', { name: /^Hexágono 0506 · Selva ·/ });
   await center.click();
-  await expect(page.getByRole('status')).toContainText('Selva');
+  await expect(page.locator('#selection')).toContainText('Selva');
   await expect(page.locator('#generation-summary')).toContainText('campanha-42');
   await expect(page.locator('#generation-summary')).toContainText('Inicial: Selva · Ártico / Selva / Litoral');
   await page.getByLabel('Floresta ou selva').selectOption('Floresta');
@@ -54,7 +54,7 @@ test('semente é texto literal e o teclado funciona depois de substituir o mapa'
   await page.locator('.hex').first().focus();
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('status')).toContainText('0201');
+  await expect(page.locator('#selection')).toContainText('0201');
 });
 
 test('imprime sementes longas e espaços sem perder a versão nem as margens', async ({ page }) => {
@@ -65,7 +65,7 @@ test('imprime sementes longas e espaços sem perder a versão nem as margens', a
     await page.getByRole('button', { name: 'Gerar região', exact: true }).click();
     await page.emulateMedia({ media: 'print' });
     const label = page.locator('.map-generation').first();
-    await expect(label).toHaveText(`Semente: ${JSON.stringify(seed)} · region-v2`);
+    await expect(label).toHaveText(`Semente: ${JSON.stringify(seed)} · region-v4`);
     const bounds = await label.evaluate(element => {
       const text = element as SVGTextElement;
       const box = text.getBBox();

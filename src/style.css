@@ -34,9 +34,32 @@ h1 { font: 450 clamp(1.7rem, 3vw, 2.6rem)/1.2 'Literata Variable', Georgia, seri
 .generate-button:hover { background: #41463b; }
 .generation-summary { grid-column: 1 / -1; margin: 0; font-size: 13px; line-height: 1.6; color: var(--muted); overflow-wrap: anywhere; }
 .map-generation { font-size: 2.2px; white-space: pre; }
+.river-controls { margin-bottom: 24px; }
+.river-controls label { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.river-controls input { width: 18px; height: 18px; accent-color: var(--ink); }
+.river-controls p { margin: 4px 0 0; max-width: 75ch; font-size: 13px; line-height: 1.6; color: var(--muted); }
+.river-overlay { fill: none; stroke: currentColor; stroke-width: 0.65; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.storage-controls { margin-bottom: 24px; padding-block: 16px; border-block: 1px solid var(--line); }
+.storage-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.storage-actions button, .storage-actions input { min-height: 44px; max-width: 100%; padding: 10px 12px; background: white; color: var(--ink); border: 1px solid #767a6e; border-radius: 3px; font: inherit; font-size: 14px; }
+.storage-actions label { display: grid; gap: 6px; min-width: 0; font-size: 13px; font-weight: 600; }
+.storage-controls p { font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; margin: 8px 0 0; }
+.storage-controls p:empty { display: none; }
+@media print { .storage-controls { display: none; } }
+.history-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 24px; }
+.history-controls span { color: var(--muted); font-size: 13px; }
+.history-controls button, .cell-editor button { min-height: 44px; padding: 10px 12px; background: white; color: var(--ink); border: 1px solid #767a6e; border-radius: 3px; font-size: 14px; }
+button:disabled { cursor: default; color: var(--muted); border-color: var(--line); }
+.cell-editor:not([hidden]), .cell-editor form { display: grid; gap: 12px; }
+.cell-editor { margin-top: 24px; }
+.cell-editor form { padding-block: 16px; border-block: 1px solid var(--line); }
+.cell-editor label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; min-width: 0; }
+.cell-editor input, .cell-editor select { width: 100%; min-width: 0; min-height: 44px; padding: 10px; font: inherit; font-size: 16px; font-weight: 400; color: var(--ink); background: white; border: 1px solid #767a6e; border-radius: 3px; }
+.cell-editor p { font-size: 12px; }
+#selection { overflow-wrap: anywhere; }
 .workspace { display: grid; grid-template-columns: minmax(0, 760px) 238px; justify-content: center; align-items: start; gap: 32px; }
 .sheets { grid-column: 1; grid-row: 1; display: grid; grid-template-columns: minmax(0, 760px); gap: 28px; min-width: 0; }
-.inspector { grid-column: 2; grid-row: 1; font-size: 14px; line-height: 1.6; position: sticky; top: 24px; }
+.inspector { grid-column: 2; grid-row: 1; font-size: 14px; line-height: 1.6; position: static; }
 .inspector section { padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
 .inspector h2 { font-size: 15px; line-height: 1.4; margin: 0 0 16px; }
 .inspector p { color: var(--muted); margin: 10px 0 0; }
@@ -76,6 +99,20 @@ summary { font-size: 13px; font-weight: 600; padding: 6px 0; }
 .sheet-caption { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 12px 0 0; }
 .app-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; border-top: 1px solid var(--line); margin-top: 36px; padding-top: 12px; color: var(--muted); font-size: 12px; line-height: 1.6; }
 .app-footer p { margin: 0; }
+.print-controls { max-width: 1030px; margin: 0 auto 24px; padding: 16px; border: 1px solid var(--line); font-size: 14px; }
+.print-controls legend { font-weight: 600; padding: 0 6px; }
+.print-controls label { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.print-controls input { width: 18px; height: 18px; accent-color: var(--ink); }
+.print-controls p { max-width: 70ch; line-height: 1.6; color: var(--muted); }
+.region-key { max-width: 1030px; margin: 28px auto 0; border-top: 1px solid var(--line); padding-top: 16px; font-size: 14px; line-height: 1.6; }
+.region-key summary { font-size: 16px; }
+.region-key p { color: var(--muted); }
+.key-scroll { overflow-x: auto; scrollbar-color: var(--muted) white; }
+.region-key table { width: 100%; border-collapse: collapse; text-align: left; font-variant-numeric: tabular-nums; }
+.region-key th, .region-key td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.region-key thead th { font-size: 13px; }
+.region-key tbody th { font-weight: 400; }
+.region-key td:nth-child(3) { min-width: 180px; overflow-wrap: anywhere; }
 @media (max-width: 1100px) {
   .generation-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   main { padding: 28px 24px 20px; }
@@ -100,11 +137,29 @@ summary { font-size: 13px; font-weight: 600; padding: 6px 0; }
   #selection { min-height: 90px; }
   .app-footer { margin-top: 28px; }
 }
+#print-output { display: none; }
 @page { size: A4 portrait; margin: 0; }
+@page map { size: A4 portrait; margin: 0; }
+@page key { size: A4 portrait; margin: 12mm; }
 @media print {
   :root, body { background: white; }
   body, main, .workspace, .sheets { display: block; margin: 0; padding: 0; max-width: none; }
-  .generation-controls, .app-header, .intro, .inspector, .sheet-heading, .sheet-caption, .app-footer, .skip-link { display: none !important; }
+  .history-controls, #region-key, .generation-controls, .app-header, .intro, .inspector, .sheet-heading, .sheet-caption, .app-footer, .skip-link { display: none !important; }
+  #app { display: none; }
+  #print-output { display: block; }
+  #print-output .comparison { page: map; }
+  .print-key { page: key; break-before: page; margin: 0; padding: 0; border: 0; max-width: none; color: black; font-size: 10pt; line-height: 1.35; }
+  .print-key h1 { font-size: 18pt; margin: 0 0 4mm; }
+  .print-key p { margin: 0 0 5mm; overflow-wrap: anywhere; color: black; }
+  .print-key table { table-layout: fixed; }
+  .print-key th, .print-key td { padding: 2mm; color: black; overflow-wrap: anywhere; }
+  .print-key thead { display: table-header-group; }
+  .print-key thead th { font-size: 10pt; }
+  .print-key tr { break-inside: avoid; }
+  .print-key th:nth-child(1) { width: 15%; }
+  .print-key th:nth-child(2) { width: 18%; }
+  .print-key th:nth-child(3) { width: 47%; }
+  .print-key th:nth-child(4) { width: 20%; }
   .comparison { width: 210mm; height: 297mm; break-after: page; break-inside: avoid; margin: 0; padding: 0; }
   .comparison:last-child { break-after: auto; }
   .paper { box-shadow: none; }
