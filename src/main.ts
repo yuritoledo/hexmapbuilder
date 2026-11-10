@@ -3,6 +3,7 @@ import './style.css';
 import { densities, dangerNames, terrains, localCategories, type Density, type HexCell, type Terrain, type Danger, type LocalCategory } from './grid';
 import { defaultOptions, generateRegion, terrainNames, terrainPositions, type GenerationOptions } from './generation';
 import { mapSheet, regionKey, cellSymbol, generationOptionsLabel } from './map-view';
+import { printMap, printKey } from './print-view';
 import { editCell, rerollComponent, MAX_LOCAL_NAME_LENGTH, type RerollComponent } from './editing';
 import { RegionHistory } from './history';
 import { setRiverEnabled } from './river';
@@ -44,6 +45,12 @@ app.innerHTML = `
       <label><input id="river-enabled" type="checkbox" aria-describedby="river-help" />Rio contínuo (adaptação opcional)</label>
       <p id="river-help">Uma linha de norte a sul, por semente. Cruza qualquer terreno, inclusive oceano, sem mudar seus tipos. Editar um hexágono preserva o percurso.</p>
     </div>
+    <fieldset class="print-controls">
+      <legend>Informações no mapa impresso</legend>
+      <label><input id="print-locations" type="checkbox" /> Mostrar locais no mapa impresso</label>
+      <label><input id="print-danger" type="checkbox" /> Mostrar perigo no mapa impresso</label>
+      <p>A chave sempre inclui todos os locais, a base e o perigo. Ela imprime em páginas separadas; não entregue essas páginas aos jogadores.</p>
+    </fieldset>
     <div class="history-controls" aria-label="Histórico da sessão">
       <button id="undo" type="button" disabled>Desfazer</button>
       <button id="redo" type="button" disabled>Refazer</button>
@@ -175,6 +182,18 @@ redoButton.addEventListener('click', () => {
   if (history.redo()) { region = history.current; renderRegion(); }
 });
 app.querySelector<HTMLButtonElement>('.print-button')!.addEventListener('click', () => window.print());
+window.addEventListener('beforeprint', () => {
+  document.querySelector('#print-output')?.remove();
+  const output = document.createElement('div');
+  output.id = 'print-output';
+  document.body.append(output);
+  printMap(output, region, {
+    showLocations: app.querySelector<HTMLInputElement>('#print-locations')!.checked,
+    showDanger: app.querySelector<HTMLInputElement>('#print-danger')!.checked,
+  });
+  printKey(output, region);
+});
+window.addEventListener('afterprint', () => document.querySelector('#print-output')?.remove());
 
 function selectHex(element: SVGGElement, density: Density, cell: HexCell) {
   selectedCoordinate = cell.coordinate;
