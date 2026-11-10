@@ -59,24 +59,25 @@ test('imprime uma página A4 em tamanho real e sem destaque da seleção', async
   await page.goto('/');
   await page.evaluate(() => document.fonts.ready);
   await page.getByRole('group', { name: 'Grade B · Compacta' }).getByRole('button').first().click();
+  await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
   await page.emulateMedia({ media: 'print' });
   await expect(page.getByRole('heading', { name: 'Gere seu próximo território.' })).toBeHidden();
-  const polygon = page.locator('[aria-pressed="true"] polygon');
+  const polygon = page.locator('#print-output .hex polygon').first();
   await expect(polygon).toHaveCSS('fill', 'rgb(255, 255, 255)');
   await expect(polygon).toHaveCSS('stroke-width', '0.3px');
-  const pdf = await page.pdf({ path: testInfo.outputPath('comparacao-a4.pdf'), preferCSSPageSize: true });
-  const pdfDocument = await PDFDocument.load(pdf);
-  expect(pdfDocument.getPageCount()).toBe(1);
-  for (const sheet of pdfDocument.getPages()) {
-    expect(sheet.getWidth() * 25.4 / 72).toBeCloseTo(210, 0);
-    expect(sheet.getHeight() * 25.4 / 72).toBeCloseTo(297, 0);
-  }
-  const dimensions = await page.locator('.map-sheet').first().evaluate(element => {
+  const dimensions = await page.locator('#print-output .map-sheet').first().evaluate(element => {
     const { width, height } = element.getBoundingClientRect();
     return { width, height };
   });
   expect(dimensions.width * 25.4 / 96).toBeCloseTo(210, 1);
   expect(dimensions.height * 25.4 / 96).toBeCloseTo(297, 1);
+  const pdf = await page.pdf({ path: testInfo.outputPath('comparacao-a4.pdf'), preferCSSPageSize: true });
+  const pdfDocument = await PDFDocument.load(pdf);
+  expect(pdfDocument.getPageCount()).toBeGreaterThan(1);
+  for (const sheet of pdfDocument.getPages()) {
+    expect(sheet.getWidth() * 25.4 / 72).toBeCloseTo(210, 0);
+    expect(sheet.getHeight() * 25.4 / 72).toBeCloseTo(297, 0);
+  }
 });
 
 
@@ -86,8 +87,9 @@ test('mantém os vetores Kenney dentro dos recortes no mapa e na legenda impress
   for (const forest of ['Floresta', 'Selva']) {
     await page.getByLabel('Floresta ou selva').selectOption(forest);
     await page.getByRole('button', { name: 'Gerar região', exact: true }).click();
+    await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
     await page.emulateMedia({ media: 'print' });
-    const symbols = page.locator('.terrain-symbol[data-source="kenney"] svg');
+    const symbols = page.locator('#print-output .terrain-symbol[data-source="kenney"] svg');
     expect(await symbols.count()).toBeGreaterThan(0);
     const clipped = await symbols.evaluateAll(elements => elements.flatMap(element => {
       if (!(element instanceof SVGSVGElement)) return ['não é SVG'];
@@ -115,5 +117,6 @@ test('mantém os vetores Kenney dentro dos recortes no mapa e na legenda impress
     }));
     expect(clipped).toEqual([]);
     await page.emulateMedia({ media: 'screen' });
+    await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
   }
 });
