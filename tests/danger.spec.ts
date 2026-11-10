@@ -21,9 +21,12 @@ test('consulta perigo real e a base central no mapa normal, inclusive após gera
   page.on('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Gerar região', exact: true }).click();
   expect(await state()).toEqual(first);
+  await page.getByRole('checkbox', { name: 'Mostrar locais no mapa impresso' }).check();
+  await page.getByRole('checkbox', { name: 'Mostrar perigo no mapa impresso' }).check();
+  await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
   await page.emulateMedia({ media: 'print' });
-  await expect(page.locator('.danger-legend')).toBeVisible();
-  await expect(page.locator('[data-expedition-base]')).toBeVisible();
+  await expect(page.locator('#print-output .danger-legend')).toBeVisible();
+  await expect(page.locator('#print-output [data-expedition-base]')).toBeVisible();
 });
 
 test('não corta unidades ao consultar a base em nenhum terreno', async ({ page }) => {
