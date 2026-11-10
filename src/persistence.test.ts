@@ -17,6 +17,10 @@ it('round trips exact edited state and continues each independent reroll stream'
   }
 });
 
+it.each([' ', '   ', '\t\n'])('preserves valid whitespace seed %j', seed => {
+  const region = generateRegion(densities.compacta, { ...defaultOptions, seed });
+  expect(decodeRegion(encodeRegion(region))).toEqual(region);
+});
 // Mutate serialized public documents, never private validator helpers.
 it.each([
   ['format', 'other'], ['schemaVersion', 0], ['region.version', 'legacy'],

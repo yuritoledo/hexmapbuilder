@@ -141,3 +141,54 @@ test('keeps editor usable when browser storage access is denied', async ({ page 
   await page.getByRole('button', { name: 'Tentar salvar novamente' }).click();
   await expect(page.locator('#storage-status')).toContainText('apenas nesta sessão');
 });
+
+test('reloads a generated whitespace-only seed and preserves generation undo and redo', async ({ page }) => {
+  await page.goto('/');
+  const original = await exportMap(page);
+  await page.getByLabel('Semente').fill('   ');
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Gerar região', exact: true }).click();
+  const generated = await exportMap(page);
+  expect(JSON.parse(generated).region.options.seed).toBe('   ');
+  await page.getByRole('button', { name: 'Desfazer', exact: true }).click();
+  expect(await exportMap(page)).toBe(original);
+  await page.getByRole('button', { name: 'Refazer', exact: true }).click();
+  expect(await exportMap(page)).toBe(generated);
+  await page.reload();
+  expect(await exportMap(page)).toBe(generated);
+  await expect(page.getByLabel('Semente')).toHaveValue('   ');
+});
+
+test('imports an enabled river snapshot without changing cells or continuation', async ({ page }) => {
+  await page.goto('/');
+  const doc = JSON.parse(await exportMap(page));
+  doc.region.river = { enabled: true, path: Array.from({ length: 12 }, (_, row) => `05${String(row + 1).padStart(2, '0')}`) };
+  page.once('dialog', dialog => dialog.accept());
+  await importMap(page, JSON.stringify(doc));
+  await expect(page.locator('#file-status')).toContainText('Mapa importado');
+  expect(JSON.parse(await exportMap(page))).toEqual(doc);
+  await center(page).click();
+  await page.getByRole('button', { name: 'Gerar terreno novamente', exact: true }).click();
+  const continuation = await exportMap(page);
+  expect(JSON.parse(continuation).region.river).toEqual(doc.region.river);
+  await page.reload();
+  expect(await exportMap(page)).toBe(continuation);
+  page.once('dialog', dialog => dialog.accept());
+  await importMap(page, JSON.stringify(doc));
+  await expect(page.locator('#file-status')).toContainText('Mapa importado');
+  await center(page).click();
+  await page.getByRole('button', { name: 'Gerar terreno novamente', exact: true }).click();
+  expect(await exportMap(page)).toBe(continuation);
+});
+
+test('storage controls fit a narrow screen and do not appear in print', async ({ page }, testInfo) => {
+  await page.goto('/');
+  await page.screenshot({ path: testInfo.outputPath('storage-desktop.png'), fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await expect(page.getByLabel('Importar mapa')).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath('storage-mobile.png'), fullPage: true });
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('.storage-controls')).toBeHidden();
+});

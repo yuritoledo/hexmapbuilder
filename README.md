@@ -161,16 +161,16 @@
 - `GeneratedRegion.rerolls` contém `{ terrain: number, local: number, danger: number }`, inicialmente zero. Cada geração individual incrementa só seu contador uma vez, mesmo quando o resultado visível é igual. A contagem é por componente e mapa, não por hexágono; ações de outros componentes não consomem sua sequência.
 - Edições manuais não consomem sorteios. Gerar um mapa inteiro reinicia os contadores. Cancelar a confirmação não altera mapa nem histórico.
 - Desfazer/refazer restaura snapshots completos, inclusive opções aplicadas e contadores. Uma nova alteração após desfazer elimina refazer; uma edição sem mudança não cria entrada nem elimina refazer. Sorteio com resultado igual cria entrada, pois muda o contador.
-- O histórico mantém todas as ações da sessão, sem limite artificial; usa memória proporcional ao número de snapshots. Recarregar encerra esse histórico. Persistência pertence ao #7.
+- O histórico mantém todas as ações da sessão, sem limite artificial; usa memória proporcional ao número de snapshots. Recarregar encerra esse histórico. O mapa atual persiste, mas o histórico não.
 - A seleção, foco, abertura da chave e campos de geração ainda não aplicados são estado da interface, não snapshots do mapa. Edição preserva a seleção. Gerar mapa inteiro limpa a seleção e fecha a chave.
 
 ### Contratos para salvar/importar (#7) e rio (#8)
 
 - `editCell(region: GeneratedRegion, coordinate: string, edit: CellEdit): GeneratedRegion` e `rerollComponent(region: GeneratedRegion, coordinate: string, component: RerollComponent, rollDie?: () => number): GeneratedRegion` ficam em `src/editing.ts`. Coordenada desconhecida lança erro antes de consumir dados. O dado opcional é uma função que retorna inteiros de 1 a 6 para testes controlados.
-- `CellEdit` discrimina `terrain`, `danger` e `local` pelo campo `component`; `value` usa os tipos de `src/grid.ts`. `local: undefined` significa ausência. A API recebe dados internos tipados; #7 deve validar dados externos antes de chamar essa API.
+- `CellEdit` discrimina `terrain`, `danger` e `local` pelo campo `component`; `value` usa os tipos de `src/grid.ts`. `local: undefined` significa ausência. A API recebe dados internos tipados; `decodeRegion` valida dados externos antes de chamar essa API.
 - `RegionHistory` em `src/history.ts` recebe o mapa inicial. Expõe `current`, `canUndo`, `canRedo`, `apply(region): void`, `undo(): boolean`, `redo(): boolean`. `current` devolve cópia independente; a classe copia os dados recebidos. O estado do mapa é dado simples compatível com JSON e `structuredClone`.
-- `commitRegion(next: GeneratedRegion)` em `src/main.ts` aplica uma ação ao histórico, obtém `history.current` e renderiza. Novas ações de importação ou alternância de rio devem entrar por esse ponto para participar do histórico.
-- #7 deve salvar o mapa editado completo, `region.options` aplicadas e todos os contadores. Não deve reconstruir o mapa apenas pela semente nem ler opções pendentes do formulário. Uma versão do arquivo é separada de `region.version`.
+- `commitRegion(next: GeneratedRegion)` em `src/main.ts` aplica uma ação ao histórico, obtém `history.current`, renderiza e salva o mapa. Novas ações de importação ou alternância de rio devem entrar por esse ponto para participar do histórico.
+- A persistência salva o mapa editado completo, `region.options` aplicadas e todos os contadores. Não reconstrói o mapa apenas pela semente nem lê opções pendentes do formulário. Uma versão do arquivo é separada de `region.version`.
 - #8 deve adicionar o caminho do rio como dado do mapa. Edição e sorteios individuais preservam campos adicionais por espalhamento; o histórico copia o objeto inteiro. Não recalcular o caminho nesses fluxos. Uma ação de alternância deve aplicar novo snapshot pelo mesmo histórico.
 
 ## Salvamento e arquivos (#7)

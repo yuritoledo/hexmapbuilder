@@ -49,7 +49,9 @@ export function decodeRegion(text: string): GeneratedRegion {
   if (data.version !== GENERATION_VERSION || data.centerCoordinate !== '0506') return invalid();
   const fields = record(data.options, ['seed', 'initialTerrain', 'arid', 'forest', 'water']);
   const options: GenerationOptions = {
-    seed: name(fields.seed, 80), initialTerrain: member(fields.initialTerrain, ['random', ...terrainPositions]),
+    // Seeds are literal text; unlike local names, whitespace-only seeds are valid.
+    seed: typeof fields.seed === 'string' && fields.seed.length >= 1 && fields.seed.length <= 80 ? fields.seed : invalid(),
+    initialTerrain: member(fields.initialTerrain, ['random', ...terrainPositions]),
     arid: member(fields.arid, ['Deserto', 'Ártico']), forest: member(fields.forest, ['Floresta', 'Selva']),
     water: member(fields.water, ['Rio', 'Litoral']),
   };

@@ -20,11 +20,11 @@ test('consulta locais e ausência pela chave e seleção acessível, com repeti�
   await expect(hex).toHaveAccessibleName(new RegExp(`${local.local!.category} · ${local.local!.name}`));
   await hex.focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('status')).toContainText(`${local.local!.category} · ${local.local!.name}`);
+  await expect(page.locator('#selection')).toContainText(`${local.local!.category} · ${local.local!.name}`);
   await expect(hex.locator('[data-local]')).toHaveCount(1);
   const absent = region.cells.find(cell => !cell.local)!;
   await page.locator('.hex').nth(region.cells.indexOf(absent)).click();
-  await expect(page.getByRole('status')).toContainText('Sem local');
+  await expect(page.locator('#selection')).toContainText('Sem local');
   const before = await table.textContent();
   page.on('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Gerar região', exact: true }).click();

@@ -173,6 +173,10 @@ importInput.addEventListener('change', async () => {
 const history = new RegionHistory(region);
 let selectedCoordinate: string | undefined;
 const form = app.querySelector<HTMLFormElement>('#generation-form')!;
+for (const [name, value] of Object.entries(region.options)) {
+  const field = form.elements.namedItem(name);
+  if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) field.value = value;
+}
 function readOptions(): GenerationOptions {
   const fields = new FormData(form);
   return {
@@ -190,6 +194,7 @@ form.addEventListener('change', () => {
     initialSelect.querySelector<HTMLOptionElement>(`[value="${position}"]`)!.textContent = names[position];
   }
 });
+form.dispatchEvent(new Event('change'));
 form.addEventListener('submit', event => {
   event.preventDefault();
   if (!window.confirm('Substituir todo o mapa por uma nova região? A seleção atual será descartada.')) return;
