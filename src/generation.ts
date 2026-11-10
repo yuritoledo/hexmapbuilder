@@ -23,7 +23,7 @@ export function roll2d6(rollDie: () => number): number {
   return rollDie() + rollDie();
 }
 
-export const GENERATION_VERSION = 'region-v3';
+export const GENERATION_VERSION = 'region-v4';
 export interface GenerationOptions {
   seed: string;
   initialTerrain: TerrainPosition | 'random';

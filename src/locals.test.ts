@@ -16,7 +16,7 @@ it('gera local somente no resultado 1 do d6, sem substituir a base', () => {
 
 it('versiona locais e conserva terreno/perigo ao mudar somente o fluxo local', () => {
   const first = generateRegion(densities.compacta, defaultOptions);
-  expect(first.version).toBe('region-v3');
+  expect(first.version).toBe('region-v4');
   expect(generateRegion(densities.compacta, defaultOptions)).toEqual(first);
   const absent = generateRegion(densities.compacta, defaultOptions, undefined, undefined, () => 6);
   expect(absent.cells.every(cell => !cell.local)).toBe(true);

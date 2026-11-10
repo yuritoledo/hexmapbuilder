@@ -6,6 +6,7 @@ import { mapSheet, regionKey, cellSymbol, generationOptionsLabel } from './map-v
 import { printMap, printKey } from './print-view';
 import { editCell, rerollComponent, MAX_LOCAL_NAME_LENGTH, type RerollComponent } from './editing';
 import { RegionHistory } from './history';
+import { setRiverEnabled } from './river';
 import type { GeneratedRegion } from './generation';
 import { decodeRegion, encodeRegion, STORAGE_KEY, MAX_FILE_BYTES } from './persistence';
 
@@ -41,6 +42,10 @@ app.innerHTML = `
       <button class="generate-button" type="submit">Gerar região</button>
       <p id="generation-summary" class="generation-summary" aria-live="polite"></p>
     </form>
+    <div class="river-controls">
+      <label><input id="river-enabled" type="checkbox" aria-describedby="river-help" />Rio contínuo (adaptação opcional)</label>
+      <p id="river-help">Uma linha de norte a sul, por semente. Cruza qualquer terreno, inclusive oceano, sem mudar seus tipos. Editar um hexágono preserva o percurso.</p>
+    </div>
     <fieldset class="print-controls">
       <legend>Informações no mapa impresso</legend>
       <label><input id="print-locations" type="checkbox" /> Mostrar locais no mapa impresso</label>
@@ -202,7 +207,7 @@ form.addEventListener('submit', event => {
   selectedCoordinate = undefined;
   const key = app.querySelector<HTMLDetailsElement>('.region-key');
   if (key) key.open = false;
-  commitRegion(generateRegion(densities.compacta, options));
+  commitRegion(setRiverEnabled(generateRegion(densities.compacta, options), region.river.enabled));
 });
 const selection = app.querySelector<HTMLDivElement>('#selection')!;
 const editor = app.querySelector<HTMLDivElement>('#cell-editor')!;
@@ -213,6 +218,8 @@ const localCategory = app.querySelector<HTMLSelectElement>('#local-category')!;
 const removeLocal = app.querySelector<HTMLButtonElement>('#remove-local')!;
 const undoButton = app.querySelector<HTMLButtonElement>('#undo')!;
 const redoButton = app.querySelector<HTMLButtonElement>('#redo')!;
+const riverToggle = app.querySelector<HTMLInputElement>('#river-enabled')!;
+riverToggle.addEventListener('change', () => commitRegion(setRiverEnabled(region, riverToggle.checked)));
 
 function commitRegion(next: GeneratedRegion) {
   history.apply(next);
@@ -307,6 +314,7 @@ function renderRegion() {
   if (key) key.open = keyOpen;
   undoButton.disabled = !history.canUndo;
   redoButton.disabled = !history.canRedo;
+  riverToggle.checked = region.river.enabled;
   editor.hidden = true;
   selection.innerHTML = '<p>Selecione um hexágono para consultar terreno, perigo, local e base central.</p>';
   app!.querySelector('#generation-summary')!.textContent =

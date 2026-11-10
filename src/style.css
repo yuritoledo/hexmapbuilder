@@ -34,6 +34,11 @@ h1 { font: 450 clamp(1.7rem, 3vw, 2.6rem)/1.2 'Literata Variable', Georgia, seri
 .generate-button:hover { background: #41463b; }
 .generation-summary { grid-column: 1 / -1; margin: 0; font-size: 13px; line-height: 1.6; color: var(--muted); overflow-wrap: anywhere; }
 .map-generation { font-size: 2.2px; white-space: pre; }
+.river-controls { margin-bottom: 24px; }
+.river-controls label { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.river-controls input { width: 18px; height: 18px; accent-color: var(--ink); }
+.river-controls p { margin: 4px 0 0; max-width: 75ch; font-size: 13px; line-height: 1.6; color: var(--muted); }
+.river-overlay { fill: none; stroke: currentColor; stroke-width: 0.65; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 .storage-controls { margin-bottom: 24px; padding-block: 16px; border-block: 1px solid var(--line); }
 .storage-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .storage-actions button, .storage-actions input { min-height: 44px; max-width: 100%; padding: 10px 12px; background: white; color: var(--ink); border: 1px solid #767a6e; border-radius: 3px; font: inherit; font-size: 14px; }

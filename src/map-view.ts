@@ -58,6 +58,13 @@ export function generationOptionsLabel(options: GenerationOptions): string {
   return `Inicial: ${initial} · ${options.arid} / ${options.forest} / ${options.water}`;
 }
 
+function riverMarkup(region: GeneratedRegion): string {
+  if (!region.river.enabled) return '';
+  const route = region.river.path.map(coordinate => region.cells.find(cell => cell.coordinate === coordinate)!);
+  const points = [route[0]!.corners[0]!, ...route.map(cell => cell.center), route.at(-1)!.corners[3]!];
+  const d = points.map((point, index) => `${index === 0 ? 'M' : 'L'}${point.x} ${point.y}`).join(' ');
+  return `<path class="river-overlay" role="img" aria-label="Rio contínuo de norte a sul · adaptação opcional" d="${d}" />`;
+}
 export function mapSheet(container: HTMLElement, region: GeneratedRegion): void {
   const { density, cells, options } = region;
   container.innerHTML = `<section class="comparison" aria-labelledby="heading-${density.id}" data-density="${density.id}">
@@ -72,6 +79,7 @@ export function mapSheet(container: HTMLElement, region: GeneratedRegion): void 
         <text class="map-subtitle" x="12" y="28">GRADE ${density.label.toLocaleUpperCase('pt-BR')} · ${cells.length} HEXÁGONOS · A4</text>
         <path class="rule" d="M12 34H198" />
         <g class="cells">${cells.map(hexMarkup).join('')}</g>
+        ${riverMarkup(region)}
         <g class="legend" aria-label="Legenda de terrenos">
           ${Object.values(terrainNames(options)).map((terrain, index) => {
             const x = 21 + index * 28;
@@ -80,6 +88,7 @@ export function mapSheet(container: HTMLElement, region: GeneratedRegion): void 
         </g>
         <text class="scale-note danger-legend" x="12" y="272">${Object.entries(dangerNames).map(([level, name]) => `${level}${level === '1' ? ' símbolo' : ''}: ${name}`).join(' · ')} · Vilarejo: base central</text>
         <text class="scale-note" x="12" y="276">10 km entre lados opostos de cada hexágono; também entre centros vizinhos.</text>
+        ${region.river.enabled ? '<text class="scale-note river-legend" x="12" y="280">Linha contínua: rio opcional · adaptação do aplicativo.</text>' : ''}
         <path class="calibration" d="M12 281v3m0-1.5h50m0-1.5v3" />
         <text class="calibration-label" x="65" y="284">50 mm · confira após imprimir</text>
         <text class="folio" x="198" y="284">${density.id === 'ampla' ? 'A' : 'B'}</text>
