@@ -44,7 +44,7 @@ for (const showLocations of [false, true]) {
       if (!showLocations) expect(await map.getAttribute('aria-label')).not.toContain('Base');
       await expect(page.locator('#print-output')).not.toContainText('Vilarejo: base central');
       expect(await page.locator('#comparison').innerHTML()).toBe(screen);
-      expect(await page.locator('#print-output .print-key tbody tr').allTextContents()).toEqual(await page.locator('#region-key tbody tr').allTextContents());
+      expect(await page.locator('#print-output .print-key tbody th').allTextContents()).toEqual(await page.locator('#region-key tbody th').allTextContents());
       await page.pdf({ path: test.info().outputPath(`mapa-${showLocations}-${showDanger}.pdf`), preferCSSPageSize: true });
       await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
       await expect(page.locator('#print-output')).toHaveCount(0);
@@ -52,21 +52,21 @@ for (const showLocations of [false, true]) {
   }
 }
 
-test('prints the full key on separate A4 pages even when its screen disclosure is closed', async ({ page }, testInfo) => {
+test('prints all coordinates on one separate A4 key even when its screen disclosure is closed', async ({ page }, testInfo) => {
   await page.goto('/');
   await page.evaluate(() => document.fonts.ready);
-  const expectedRows = await page.locator('#region-key tbody tr').allTextContents();
+  const expectedCoordinates = await page.locator('#region-key tbody th').allTextContents();
   await expect(page.locator('#region-key details')).not.toHaveAttribute('open', '');
   await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
   await page.emulateMedia({ media: 'print' });
   const key = page.locator('#print-output .print-key');
   await expect(key).toBeVisible();
-  expect(await key.locator('tbody tr').allTextContents()).toEqual(expectedRows);
-  await expect(key).toContainText('Base das Expedições (base permanente)');
+  expect(await key.locator('tbody th').allTextContents()).toEqual(expectedCoordinates);
+  await expect(key.locator('tbody tr').filter({ hasText: '0506' })).toContainText('Base');
   await expect(key.locator('tbody tr').last()).toContainText('0912');
   const pdf = await page.pdf({ path: testInfo.outputPath('mapa-e-chave-a4.pdf'), preferCSSPageSize: true });
   const pdfDocument = await PDFDocument.load(pdf);
-  expect(pdfDocument.getPageCount()).toBeGreaterThan(1);
+  expect(pdfDocument.getPageCount()).toBe(2);
   for (const sheet of pdfDocument.getPages()) {
     expect(sheet.getWidth() * 25.4 / 72).toBeCloseTo(210, 0);
     expect(sheet.getHeight() * 25.4 / 72).toBeCloseTo(297, 0);
@@ -129,7 +129,7 @@ test('native print uses applied metadata and fits a maximum-length seed within A
   const metadata = page.locator('#print-output .map-generation');
   await expect(metadata.first()).toContainText(seed);
   await expect(metadata.last()).toContainText('Selva');
-  await expect(page.locator('#print-output .print-key p')).toContainText(seed);
+  await expect(page.locator('#print-output .key-metadata')).toContainText(seed);
   const bounds = await metadata.first().evaluate(element => {
     const box = (element as SVGGraphicsElement).getBBox();
     return { left: box.x, right: box.x + box.width };
@@ -145,10 +145,10 @@ test('prints current edits and undo without changing history or secrecy preferen
   await center.click();
   await page.getByLabel('Nome do local').fill('Abrigo editado <seguro> & base');
   await page.getByRole('button', { name: 'Aplicar local', exact: true }).click();
-  const editedRows = await page.locator('#region-key tbody tr').allTextContents();
+  const editedCoordinates = await page.locator('#region-key tbody th').allTextContents();
   await page.getByRole('checkbox', { name: 'Mostrar locais no mapa impresso' }).check();
   await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
-  expect(await page.locator('#print-output .print-key tbody tr').allTextContents()).toEqual(editedRows);
+  expect(await page.locator('#print-output .print-key tbody th').allTextContents()).toEqual(editedCoordinates);
   await expect(page.locator('#print-output [data-expedition-base]')).toHaveCount(1);
   await expect(page.locator('#print-output .hex[aria-label^="Hexágono 0506"]')).toHaveAttribute('aria-label', /Abrigo editado/);
   await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));

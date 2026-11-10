@@ -76,8 +76,8 @@ rounded:
 - Linha de conferência: 50mm somente na página do mapa. As páginas da chave usam A4, sem requisito de escala.
 - Instruções de impressão: conteúdo recolhível, fora da folha.
 - Local opcional: losango vazio acima das unidades de terreno, sem mudar a contagem de perigo nem ocultar a base.
-- Chave de quem mestra: tabela recolhível abaixo da folha, com coordenada, terreno, local/base e perigo. A tabela permite rolagem horizontal no celular e imprime completa em páginas A4 separadas, mesmo recolhida na tela.
-- Sigilo na impressão: locais/base e perigo começam ocultos no mapa, com controles independentes. Sem perigo, cada hexágono mostra exatamente uma unidade de terreno e não há legenda de perigo. A chave sempre contém os dados completos e fica com quem mestra.
+- Chave de quem mestra: a tabela da tela mantém os dados completos, permite rolagem horizontal no celular e funciona recolhida. A impressão usa uma única A4 com três blocos de 36 hexágonos, fonte de 7,5 pt, terreno/categoria abreviados, perigo 1–4 e coluna Obs. vazia por hexágono. Nomes longos recebem reticências somente na impressão.
+- Sigilo na impressão: locais/base e perigo começam ocultos no mapa, com controles independentes. Sem perigo, cada hexágono mostra exatamente uma unidade de terreno e não há legenda de perigo. A chave inclui todos os hexágonos, independe do sigilo e fica com quem mestra.
 
 ## Do's and Don'ts
 

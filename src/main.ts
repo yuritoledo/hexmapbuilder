@@ -50,7 +50,7 @@ app.innerHTML = `
       <legend>Informações no mapa impresso</legend>
       <label><input id="print-locations" type="checkbox" /> Mostrar locais no mapa impresso</label>
       <label><input id="print-danger" type="checkbox" /> Mostrar perigo no mapa impresso</label>
-      <p>A chave sempre inclui todos os locais, a base e o perigo. Ela imprime em páginas separadas; não entregue essas páginas aos jogadores.</p>
+      <p>A chave reúne todos os hexágonos em uma folha A4, com nomes abreviados e espaço para anotações. Não entregue essa folha aos jogadores.</p>
     </fieldset>
     <div class="history-controls" aria-label="Histórico da sessão">
       <button id="undo" type="button" disabled>Desfazer</button>

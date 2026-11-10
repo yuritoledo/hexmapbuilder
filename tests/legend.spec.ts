@@ -61,7 +61,7 @@ for (const medium of ['screen', 'print'] as const) {
       await map.screenshot({ path: '/tmp/hexmap-final-legend-print.png' });
       const pdf = await PDFDocument.load(await page.pdf({ path: testInfo.outputPath('mixed-terrains-a4.pdf'), preferCSSPageSize: true }));
       expect(pdf.getPageCount()).toBe(baselinePages);
-      expect(baselinePages).toBe(5);
+      expect(baselinePages).toBe(2);
       for (const sheet of pdf.getPages()) {
         expect(sheet.getWidth() * 25.4 / 72).toBeCloseTo(210, 0);
         expect(sheet.getHeight() * 25.4 / 72).toBeCloseTo(297, 0);

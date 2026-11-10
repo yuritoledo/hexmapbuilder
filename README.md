@@ -70,7 +70,7 @@
 - Todas as categorias podem ocorrer em qualquer terreno, inclusive água. Não há filtro, nova rolagem ou promessa de coerência geográfica.
 - `local` guarda somente nome e categoria. `expeditionBase` continua separado e permanente; o centro pode conter ambos, inclusive em água.
 - Um losango vazio indica local opcional, acima dos símbolos de terreno. Não substitui unidades de perigo nem o vilarejo da base. Nome e categoria aparecem na seleção, no nome acessível e na chave.
-- A chave na tela e na impressão sempre conserva os dados completos. Os controles de sigilo afetam somente o mapa impresso.
+- A chave na tela e o arquivo exportado conservam os dados completos. A chave impressa resume os 108 hexágonos em uma página e abrevia nomes longos com reticências. Os controles de sigilo afetam somente o mapa impresso.
 - Não há cataclismos nem promessa de clima ou costas coerentes. O rio contínuo opcional é uma sobreposição independente dos terrenos.
 
 ## Rio contínuo opcional (#8)
@@ -92,20 +92,20 @@
 - Antes de imprimir, escolha **Mostrar locais no mapa impresso** e **Mostrar perigo no mapa impresso**. Ambos começam desmarcados e funcionam de forma independente.
 - Ocultar locais também oculta a Base das Expedições. Ocultar perigo mostra exatamente uma unidade de terreno por hexágono e remove a legenda de perigo.
 - O mapa usa a região atual, inclusive edições. Não usa valores ainda não aplicados no formulário.
-- A chave sempre contém coordenada, terreno, local opcional, base permanente e perigo de todos os 108 hexágonos. Não entregue as páginas da chave aos jogadores.
-- A tabela repete o cabeçalho em cada página. As linhas não se dividem e os nomes longos quebram dentro das células.
+- A chave contém os 108 hexágonos em três blocos de 36 linhas, com coordenada, terreno abreviado, perigo 1–4, local/base e uma coluna Obs. em branco por hexágono. Não entregue a folha da chave aos jogadores.
+- Nomes longos recebem reticências somente na impressão. Consulte os nomes completos no aplicativo ou no arquivo exportado. Cada linha oferece cerca de 18 mm × 6,5 mm para observações à mão.
 1. Selecione **Imprimir mapa**.
 2. Use papel **A4**, orientação **retrato** e escala **100%**.
 3. Desative margens adicionais, cabeçalhos e rodapés do navegador.
 4. Imprima ou selecione **Salvar como PDF**.
 5. Confira a página. A linha de conferência deve medir **50 mm**.
 
-- O CSS usa milímetros. O mapa ocupa uma página A4. A chave começa na página seguinte e continua em quantas páginas A4 forem necessárias.
+- O CSS usa milímetros. A impressão tem exatamente duas páginas A4: o mapa na primeira e a chave compacta na segunda, com margens de 12 mm na chave.
 - A folha inclui semente, versão, terreno inicial e variantes para repetir a geração.
 - A semente aparece entre aspas no formato JSON, com espaços preservados e caracteres especiais escapados. As aspas externas não fazem parte da semente.
 - Sementes largas recebem ajuste horizontal de texto para respeitar os 12 mm de margem.
 - Controles, painel e destaque de seleção não aparecem na impressão.
-- Os testes verificam as quatro combinações de sigilo, o conteúdo completo da chave e as páginas A4 no PDF do Chromium.
+- Os testes verificam as quatro combinações de sigilo e duas páginas A4, inclusive com 108 nomes longos e espaço de observações por hexágono.
 - O teste não substitui a conferência física da impressora. Outros navegadores e impressoras precisam de conferência.
 
 ## Arquitetura e ferramentas
@@ -120,7 +120,7 @@
 - `src/river.ts`: percurso opcional por semente e alternância sem alterar os hexágonos.
 - `src/map-view.ts`: desenha a folha, a legenda ativa e os símbolos locais.
 - `src/print-view.ts`: `printMap(container: HTMLElement, region: GeneratedRegion, visibility: PrintVisibility): void` cria a projeção sem alterar a região. `PrintVisibility` contém `showLocations` e `showDanger`.
-- `printKey(container: HTMLElement, region: GeneratedRegion): void` acrescenta a chave completa, sem parâmetros de sigilo. Funciona com o painel da tela fechado.
+- `printKey(container: HTMLElement, region: GeneratedRegion): void` acrescenta a chave compacta, sem parâmetros de sigilo. Funciona com o painel da tela fechado e não altera nomes ou dados da região.
 - `beforeprint` recria `#print-output` a partir da região atual. `afterprint` remove essa cópia. O botão e a impressão nativa do navegador usam o mesmo caminho.
 - Os controles de impressão são preferências da sessão, fora de `GeneratedRegion`. Importar substitui a região atual, não a projeção descartável.
 - `printMap` conserva o percurso do rio e chama `mapSheet`. O rio é uma sobreposição separada do terreno. O sigilo de local/perigo não remove o rio. A impressão não consome dados aleatórios.

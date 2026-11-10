@@ -148,18 +148,22 @@ summary { font-size: 13px; font-weight: 600; padding: 6px 0; }
   #app { display: none; }
   #print-output { display: block; }
   #print-output .comparison { page: map; }
-  .print-key { page: key; break-before: page; margin: 0; padding: 0; border: 0; max-width: none; color: black; font-size: 10pt; line-height: 1.35; }
-  .print-key h1 { font-size: 18pt; margin: 0 0 4mm; }
-  .print-key p { margin: 0 0 5mm; overflow-wrap: anywhere; color: black; }
-  .print-key table { table-layout: fixed; }
-  .print-key th, .print-key td { padding: 2mm; color: black; overflow-wrap: anywhere; }
-  .print-key thead { display: table-header-group; }
-  .print-key thead th { font-size: 10pt; }
-  .print-key tr { break-inside: avoid; }
-  .print-key th:nth-child(1) { width: 15%; }
-  .print-key th:nth-child(2) { width: 18%; }
-  .print-key th:nth-child(3) { width: 47%; }
-  .print-key th:nth-child(4) { width: 20%; }
+  .print-key { page: key; break-before: page; margin: 0; padding: 0; border: 0; width: 186mm; max-width: none; color: black; font-size: 7.5pt; line-height: 1.2; }
+  .print-key h1 { font-size: 14pt; margin: 0 0 1.5mm; }
+  .print-key p { margin: 0 0 1.2mm; color: black; }
+  .print-key .key-metadata { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .print-key .key-legend { font-size: 7pt; }
+  .key-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3mm; margin-top: 2mm; }
+  .print-key table { width: 100%; border-collapse: collapse; table-layout: fixed; text-align: left; font-variant-numeric: tabular-nums; }
+  .print-key th, .print-key td { padding: 0.4mm; color: black; border-bottom: 0.2mm solid #aaa; vertical-align: middle; box-sizing: border-box; }
+  .print-key thead th { height: 5mm; font-size: 7.5pt; }
+  .print-key tbody tr { height: 6.5mm; break-inside: avoid; }
+  .print-key tbody th { font-weight: 400; }
+  .print-key .key-local span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .print-key .key-coordinate-col { width: 8mm; }
+  .print-key .key-terrain-col { width: 8mm; }
+  .print-key .key-local-col { width: 24mm; }
+  .print-key .key-observations { border-left: 0.2mm solid #aaa; }
   .comparison { width: 210mm; height: 297mm; break-after: page; break-inside: avoid; margin: 0; padding: 0; }
   .comparison:last-child { break-after: auto; }
   .paper { box-shadow: none; }

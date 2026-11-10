@@ -92,9 +92,9 @@ test('complete enabled-river journey preserves exact edits and all random contin
     hexes.every(hex => hex.querySelectorAll('[data-biome-unit]').length === 1))).toBe(true);
   const key = page.locator('#print-output .print-key');
   await expect(key.locator('tbody tr')).toHaveCount(108);
-  await expect(key).toContainText('Porto <seguro> & "abrigo"');
+  await expect(key).toContainText('Porto <seguro>');
   await expect(key).toContainText('Base das Expedições');
-  await expect(key).toContainText('Mortal (4)');
+  await expect(key.locator('tbody tr').filter({ hasText: '0506' }).locator('td').first()).toContainText('4');
   await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
   await expect(page.locator('#print-output')).toHaveCount(0);
   await page.emulateMedia({ media: 'screen' });
