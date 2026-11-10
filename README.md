@@ -40,7 +40,7 @@
 - Apenas um hexágono fica selecionado.
 - No celular, a seleção traz o painel de consulta para a tela.
 
-## Contrato de geração: region-v3
+## Contrato de geração: region-v4
 
 - Esta é uma adaptação em lote das tabelas da spec. Não simula exploração progressiva.
 - A tabela inicial usa dois d6: 2 Deserto/Ártico; 3 Pântano; 4–6 Pradaria; 7–8 Floresta/Selva; 9–10 Rio/Litoral; 11 Oceano; 12 Montanha.
@@ -71,7 +71,21 @@
 - `local` guarda somente nome e categoria. `expeditionBase` continua separado e permanente; o centro pode conter ambos, inclusive em água.
 - Um losango vazio indica local opcional, acima dos símbolos de terreno. Não substitui unidades de perigo nem o vilarejo da base. Nome e categoria aparecem na seleção, no nome acessível e na chave.
 - A chave desta etapa é somente para a tela. A impressão mantém o mapa com perigo, base e marcadores. Sigilo e paginação da chave pertencem ao ticket #9.
-- Não há cataclismos nem promessa de clima, costas ou rios contínuos.
+- Não há cataclismos nem promessa de clima ou costas coerentes. O rio contínuo opcional é uma sobreposição independente dos terrenos.
+
+## Rio contínuo opcional (#8)
+
+- Marque **Rio contínuo (adaptação opcional)** para acrescentar uma única linha de norte a sul. A opção começa desligada.
+- Esta é uma adaptação do aplicativo, não uma regra atribuída ao livro. Não altera o terreno `Rio`/`Litoral`, nem tenta corrigir clima, costas ou hidrografia.
+- O percurso pode cruzar qualquer terreno, inclusive Oceano e Litoral. Não cria lagos, afluentes, elevação ou novos tipos de terreno.
+- `region-v4` acrescenta `river` ao snapshot. Desligado é exatamente `{ enabled: false, path: [] }`. Ligado contém coordenadas canônicas, únicas, adjacentes, da primeira à última linha.
+- `setRiverEnabled(region, enabled)` em `src/river.ts` usa o fluxo independente FNV-1a UTF-16 + Mulberry32 com `region.options.seed` seguido de NUL e `river-v1`. Não consome dados de `terrain-v1`, `danger-v1`, `local-v1` ou `edit-v1`.
+- O começo usa dois d6: coluna zero-based `((d1 - 1) * 6 + d2 - 1) % columns`. Em cada linha, os candidatos ao sul são a mesma coluna e a coluna anterior (linha par) ou seguinte (linha ímpar), dentro da grade e em ordem crescente. Um d6 escolhe o primeiro com 1–3 ou o segundo com 4–6. Mesmo com apenas um candidato, consome o dado. A última linha não consome dado de transição.
+- A linha gráfica une os centros do percurso. Começa no vértice norte do primeiro hexágono e termina no vértice sul do último. A folha identifica a linha como adaptação opcional.
+- A mesma semente, grade e versão repetem o percurso. Variantes de terreno, opções pendentes e rolagens de outros componentes não o alteram.
+- Editar ou gerar novamente terreno, perigo ou local de um hexágono conserva o percurso, a base e os vizinhos.
+- Alternar entra no histórico. Desfazer/refazer restaura o estado exato. Desligar remove toda a linha; ligar novamente calcula o mesmo percurso por semente. Ativar um mapa já ligado preserva seu percurso salvo.
+- Gerar um mapa inteiro conserva a escolha ligado/desligado e recalcula o percurso pela nova semente. Cancelar conserva o mapa e o histórico. A base permanente em 0506 e o local opcional continuam separados.
 
 ## Imprimir ou salvar PDF
 
@@ -98,6 +112,7 @@
 - `src/grid.ts`: tipos de terreno e geometria em milímetros. A alternativa A fica para regressão geométrica; só B aparece na interface.
 - `src/generation.ts`: tabelas, dados com semente, visita da grade e metadados da região.
 - `src/locals.ts`: política de presença, categoria e nomes originais dos locais.
+- `src/river.ts`: percurso opcional por semente e alternância sem alterar os hexágonos.
 - `src/map-view.ts`: desenha a folha, a legenda ativa e os símbolos locais.
 - `src/main.ts`: controla formulário, confirmação, geração, foco e seleção. Mudar o foco não muda a seleção.
 - `src/style.css`: define a apresentação responsiva e as regras de impressão.
@@ -145,7 +160,7 @@
 - As variantes equivalentes (Deserto/Ártico, Floresta/Selva, Rio/Litoral) compartilham a posição da tabela. O resultado usa as variantes aplicadas ao mapa, não os valores ainda não aplicados no formulário de geração.
 - Terreno consome 2d6; resultado 12 consome mais 2d6 na tabela inicial. Perigo consome 1d6 (1 → Seguro, 2–3 → Inseguro, 4–5 → Arriscado, 6 → Mortal).
 - Local consome 1d6 para presença. Apenas 1 cria local e consome mais dois d6, para categoria e nome. Os outros resultados removem o local opcional.
-- A geração inicial `region-v3` e seus fluxos permanecem iguais. A edição usa fluxos separados `edit-v1` com FNV-1a UTF-16 + Mulberry32.
+- A geração inicial `region-v4` preserva os fluxos de terreno, perigo e locais. A edição usa fluxos separados `edit-v1` com FNV-1a UTF-16 + Mulberry32.
 - A semente de cada ação é a concatenação de `region.options.seed`, NUL, `edit-v1`, NUL, componente (`terrain`, `danger`, `local`), NUL e contador decimal desse componente ANTES da ação.
 - `GeneratedRegion.rerolls` contém `{ terrain: number, local: number, danger: number }`, inicialmente zero. Cada geração individual incrementa só seu contador uma vez, mesmo quando o resultado visível é igual. A contagem é por componente e mapa, não por hexágono; ações de outros componentes não consomem sua sequência.
 - Edições manuais não consomem sorteios. Gerar um mapa inteiro reinicia os contadores. Cancelar a confirmação não altera mapa nem histórico.
@@ -160,7 +175,7 @@
 - `RegionHistory` em `src/history.ts` recebe o mapa inicial. Expõe `current`, `canUndo`, `canRedo`, `apply(region): void`, `undo(): boolean`, `redo(): boolean`. `current` devolve cópia independente; a classe copia os dados recebidos. O estado do mapa é dado simples compatível com JSON e `structuredClone`.
 - `commitRegion(next: GeneratedRegion)` em `src/main.ts` aplica uma ação ao histórico, obtém `history.current` e renderiza. Novas ações de importação ou alternância de rio devem entrar por esse ponto para participar do histórico.
 - #7 deve salvar o mapa editado completo, `region.options` aplicadas e todos os contadores. Não deve reconstruir o mapa apenas pela semente nem ler opções pendentes do formulário. Uma versão do arquivo é separada de `region.version`.
-- #8 deve adicionar o caminho do rio como dado do mapa. Edição e sorteios individuais preservam campos adicionais por espalhamento; o histórico copia o objeto inteiro. Não recalcular o caminho nesses fluxos. Uma ação de alternância deve aplicar novo snapshot pelo mesmo histórico.
+- `GeneratedRegion.river` contém `{ enabled: boolean; path: string[] }`. Edição e sorteios individuais preservam o percurso; o histórico copia o objeto inteiro. Alternar o rio aplica um snapshot pelo mesmo histórico. O arquivo deve guardar o percurso completo, não reconstruí-lo pela semente.
 
 ## Planejamento
 

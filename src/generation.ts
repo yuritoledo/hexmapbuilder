@@ -23,7 +23,7 @@ export function roll2d6(rollDie: () => number): number {
   return rollDie() + rollDie();
 }
 
-export const GENERATION_VERSION = 'region-v3';
+export const GENERATION_VERSION = 'region-v4';
 export interface GenerationOptions {
   seed: string;
   initialTerrain: TerrainPosition | 'random';
@@ -46,6 +46,7 @@ export interface GeneratedRegion {
   density: Density;
   centerCoordinate: string;
   rerolls: { terrain: number; local: number; danger: number };
+  river: { enabled: boolean; path: string[] };
   cells: HexCell[];
 }
 
@@ -95,6 +96,7 @@ export function generateRegion(
     version: GENERATION_VERSION, options: { ...options }, density: { ...density },
     centerCoordinate: cells[centerIndex]!.coordinate,
     rerolls: { terrain: 0, local: 0, danger: 0 },
+    river: { enabled: false, path: [] },
     cells: cells.map((cell, index) => {
       const roll = rollDanger();
       const danger = roll === 1 ? 1 : roll <= 3 ? 2 : roll <= 5 ? 3 : 4;

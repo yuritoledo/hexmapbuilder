@@ -60,7 +60,7 @@ describe('expansão a partir de um vizinho já gerado', () => {
 
   it('conserva o resultado conhecido de terrain-v1 para terras-01', () => {
     const region = generateRegion({ ...densities.compacta, columns: 3, rows: 3 }, defaultOptions);
-    expect(region.version).toBe('region-v3');
+    expect(region.version).toBe('region-v4');
     expect(region.cells.map(cell => cell.terrain)).toEqual([
       'Floresta', 'Floresta', 'Rio',
       'Rio', 'Rio', 'Rio',
@@ -71,7 +71,7 @@ describe('expansão a partir de um vizinho já gerado', () => {
     const options = { ...defaultOptions, seed: 'campanha-á-42' };
     const first = generateRegion(densities.compacta, options);
     expect(generateRegion(densities.compacta, options)).toEqual(first);
-    expect(first.version).toBe('region-v3');
+    expect(first.version).toBe('region-v4');
     expect(first.options).toEqual(options);
     expect(generateRegion(densities.compacta, { ...options, seed: 'campanha-b-42' }).cells)
       .not.toEqual(first.cells);
