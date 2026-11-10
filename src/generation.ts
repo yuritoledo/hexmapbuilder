@@ -45,11 +45,12 @@ export interface GeneratedRegion {
   options: GenerationOptions;
   density: Density;
   centerCoordinate: string;
+  rerolls: { terrain: number; local: number; danger: number };
   cells: HexCell[];
 }
 
 // FNV-1a over UTF-16 code units, followed by Mulberry32. This sequence belongs to terrain-v1.
-function seededDie(seed: string): () => number {
+export function seededDie(seed: string): () => number {
   let state = 2166136261;
   for (let index = 0; index < seed.length; index++) {
     state = Math.imul(state ^ seed.charCodeAt(index), 16777619);
@@ -93,6 +94,7 @@ export function generateRegion(
   return {
     version: GENERATION_VERSION, options: { ...options }, density: { ...density },
     centerCoordinate: cells[centerIndex]!.coordinate,
+    rerolls: { terrain: 0, local: 0, danger: 0 },
     cells: cells.map((cell, index) => {
       const roll = rollDanger();
       const danger = roll === 1 ? 1 : roll <= 3 ? 2 : roll <= 5 ? 3 : 4;
