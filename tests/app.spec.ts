@@ -11,8 +11,8 @@ test('abre a grade aprovada e consulta um hexágono pelo mouse', async ({ page }
   const label = await hex.getAttribute('aria-label');
   await hex.click();
   await expect(hex).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('status')).toContainText('0101');
-  await expect(page.getByRole('status')).toContainText(label!.split(' · ')[1]!);
+  await expect(page.locator('#selection')).toContainText('0101');
+  await expect(page.locator('#selection')).toContainText(label!.split(' · ')[1]!);
 });
 
 
@@ -28,7 +28,7 @@ test('navega e seleciona pelo teclado sem sair dos limites da grade', async ({ p
   await expect(hexes.nth(10)).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(hexes.nth(10)).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('status')).toContainText('0202');
+  await expect(page.locator('#selection')).toContainText('0202');
   await page.keyboard.press('End');
   await expect(hexes.nth(17)).toBeFocused();
   await page.keyboard.press('ArrowRight');
@@ -50,8 +50,8 @@ test('consulta o terreno no celular sem rolagem horizontal', async ({ page }) =>
   await expect(page.locator('#keyboard-help')).toBeVisible();
   const hex = page.getByRole('group', { name: 'Grade B · Compacta' }).getByRole('button').last();
   await hex.click();
-  await expect(page.getByRole('status')).toContainText('0912');
-  await expect(page.getByRole('status')).toBeInViewport();
+  await expect(page.locator('#selection')).toContainText('0912');
+  await expect(page.locator('#selection')).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
 });
 

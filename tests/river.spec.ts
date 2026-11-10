@@ -136,3 +136,53 @@ test('prints the same continuous river under every secrecy setting without chang
     }
   }
 });
+
+test('persists and transfers the exact river, applied edits and reroll continuation without regeneration', async ({ page }) => {
+  await page.goto('/');
+  const toggle = page.getByRole('checkbox', { name: 'Rio contínuo (adaptação opcional)', exact: true });
+  await toggle.check();
+  const center = page.getByRole('button', { name: /^Hexágono 0506 ·/ });
+  await center.click();
+  await page.getByLabel('Terreno do hexágono').selectOption('Oceano');
+  await page.getByLabel('Nome do local').fill('Ponte <segura> & porto');
+  await page.getByRole('button', { name: 'Aplicar local', exact: true }).click();
+  for (const component of ['terreno', 'local', 'perigo']) await page.getByRole('button', { name: `Gerar ${component} novamente`, exact: true }).click();
+  const originalPath = await page.locator('.river-overlay').getAttribute('d');
+  const saved = await page.evaluate(() => localStorage.getItem('hexmapbuilder.current'));
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Exportar mapa', exact: true }).click();
+  const stream = await (await download).createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+  const exported = Buffer.concat(chunks).toString('utf8');
+  expect(exported).toBe(saved);
+  await page.getByLabel('Semente', { exact: true }).fill('rascunho não aplicado');
+  await page.getByRole('button', { name: 'Gerar terreno novamente', exact: true }).click();
+  const continuation = await center.getAttribute('aria-label');
+  await page.getByRole('button', { name: 'Desfazer', exact: true }).click();
+  await page.reload();
+  await expect(toggle).toBeChecked();
+  await expect(page.locator('.river-overlay')).toHaveAttribute('d', originalPath!);
+  expect(await page.evaluate(() => localStorage.getItem('hexmapbuilder.current'))).toBe(saved);
+  await center.click();
+  await page.getByRole('button', { name: 'Gerar terreno novamente', exact: true }).click();
+  await expect(center).toHaveAccessibleName(continuation!);
+  await toggle.uncheck();
+  const importFile = () => page.getByLabel('Importar mapa').setInputFiles({ name: 'rio.json', mimeType: 'application/json', buffer: Buffer.from(exported) });
+  page.once('dialog', dialog => dialog.dismiss());
+  await importFile();
+  await expect(page.locator('#file-status')).toContainText('cancelada');
+  await expect(toggle).not.toBeChecked();
+  page.once('dialog', dialog => dialog.accept());
+  await importFile();
+  await expect(toggle).toBeChecked();
+  await expect(page.locator('.river-overlay')).toHaveAttribute('d', originalPath!);
+  expect(await page.evaluate(() => localStorage.getItem('hexmapbuilder.current'))).toBe(saved);
+  await page.getByRole('button', { name: 'Desfazer', exact: true }).click();
+  await expect(toggle).not.toBeChecked();
+  await page.getByRole('button', { name: 'Refazer', exact: true }).click();
+  await expect(page.locator('.river-overlay')).toHaveAttribute('d', originalPath!);
+  await page.reload();
+  await expect(toggle).toBeChecked();
+  await expect(page.locator('.river-overlay')).toHaveAttribute('d', originalPath!);
+});

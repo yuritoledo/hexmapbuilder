@@ -89,4 +89,14 @@ describe('rio opcional', () => {
       .not.toEqual(path);
     expect(setRiverEnabled(JSON.parse(JSON.stringify(region)), true).river.path).toEqual(path);
   });
+
+  it('conserva um percurso importado válido sem recalcular e fixa river-v1 por coordenadas', () => {
+    const initial = generateRegion(densities.compacta, defaultOptions);
+    expect(setRiverEnabled(initial, true).river.path).toEqual([
+      '0501', '0502', '0603', '0504', '0505', '0506', '0507', '0408', '0409', '0310', '0411', '0412',
+    ]);
+    const imported = { ...initial, river: { enabled: true, path: initial.cells.filter(cell => cell.column === 0).map(cell => cell.coordinate) } };
+    expect(setRiverEnabled(imported, true)).toEqual(imported);
+    expect(imported.river.path).not.toEqual(setRiverEnabled(initial, true).river.path);
+  });
 });

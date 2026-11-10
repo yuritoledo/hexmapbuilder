@@ -5,7 +5,7 @@
 - Estado atual: terrenos, perigo e locais por semente, chave na tela e impressão A4 com sigilo independente no mapa.
 - A grade B foi aprovada: 108 hexágonos, ponta para cima e margens mínimas de 12 mm.
 - Perigo real aparece como 1–4 símbolos de terreno. O centro contém um vilarejo, a Base das Expedições.
-- Edição e salvamento entram nos próximos tickets.
+- Edição independente, histórico da sessão, salvamento local e transferência por arquivo JSON.
 
 ## Executar
 
@@ -25,7 +25,7 @@
 - Selecione **Gerar região** e confirme a substituição do mapa atual.
 - Cancelar conserva o mapa, os metadados e a seleção. Os campos continuam com os valores digitados.
 - Os campos são opções para a próxima geração. O resumo e a folha mostram o mapa atual.
-- A abertura gera `terras-01` com as opções padrão. Recarregar perde o mapa atual.
+- A abertura recupera o mapa salvo neste navegador. Sem salvamento, gera `terras-01` com as opções padrão.
 - A mesma semente, opções, grade e versão produzem a mesma região.
 - A grade aprovada tem 9 colunas × 12 linhas, 108 hexágonos e 19 mm entre lados no papel.
 - A folha usa A4 retrato, hexágonos regulares com ponta para cima e conteúdo a pelo menos 12 mm das bordas.
@@ -123,8 +123,9 @@
 - `printKey(container: HTMLElement, region: GeneratedRegion): void` acrescenta a chave completa, sem parâmetros de sigilo. Funciona com o painel da tela fechado.
 - `beforeprint` recria `#print-output` a partir da região atual. `afterprint` remove essa cópia. O botão e a impressão nativa do navegador usam o mesmo caminho.
 - Para #7: os controles de impressão são preferências da sessão, fora de `GeneratedRegion`. Importar deve substituir a região atual, não a projeção descartável.
-- Para #8: `printMap` conserva os demais campos da região e chama `mapSheet`. Um rio deve ser uma sobreposição separada do terreno; o sigilo de local/perigo não remove o rio. Não adicione outro fluxo aleatório à impressão.
+- `printMap` conserva o percurso do rio e chama `mapSheet`. O rio é uma sobreposição separada do terreno. O sigilo de local/perigo não remove o rio. A impressão não consome dados aleatórios.
 - `src/main.ts`: controla formulário, confirmação, geração, foco e seleção. Mudar o foco não muda a seleção.
+- `src/persistence.ts`: formato de arquivo versionado, validação externa e restauração canônica do mapa editado.
 - `src/style.css`: define a apresentação responsiva e as regras de impressão.
 - **Vitest:** verifica geometria, tabelas, probabilidades de 2d6, vizinhança, variantes e repetição por semente.
 - **Playwright + Chromium:** verifica abertura, mouse, teclado, consulta móvel e PDF.
@@ -175,17 +176,33 @@
 - `GeneratedRegion.rerolls` contém `{ terrain: number, local: number, danger: number }`, inicialmente zero. Cada geração individual incrementa só seu contador uma vez, mesmo quando o resultado visível é igual. A contagem é por componente e mapa, não por hexágono; ações de outros componentes não consomem sua sequência.
 - Edições manuais não consomem sorteios. Gerar um mapa inteiro reinicia os contadores. Cancelar a confirmação não altera mapa nem histórico.
 - Desfazer/refazer restaura snapshots completos, inclusive opções aplicadas e contadores. Uma nova alteração após desfazer elimina refazer; uma edição sem mudança não cria entrada nem elimina refazer. Sorteio com resultado igual cria entrada, pois muda o contador.
-- O histórico mantém todas as ações da sessão, sem limite artificial; usa memória proporcional ao número de snapshots. Recarregar encerra esse histórico. Persistência pertence ao #7.
+- O histórico mantém todas as ações da sessão, sem limite artificial; usa memória proporcional ao número de snapshots. Recarregar encerra esse histórico. O mapa atual persiste, mas o histórico não.
 - A seleção, foco, abertura da chave e campos de geração ainda não aplicados são estado da interface, não snapshots do mapa. Edição preserva a seleção. Gerar mapa inteiro limpa a seleção e fecha a chave.
 
 ### Contratos para salvar/importar (#7) e rio (#8)
 
 - `editCell(region: GeneratedRegion, coordinate: string, edit: CellEdit): GeneratedRegion` e `rerollComponent(region: GeneratedRegion, coordinate: string, component: RerollComponent, rollDie?: () => number): GeneratedRegion` ficam em `src/editing.ts`. Coordenada desconhecida lança erro antes de consumir dados. O dado opcional é uma função que retorna inteiros de 1 a 6 para testes controlados.
-- `CellEdit` discrimina `terrain`, `danger` e `local` pelo campo `component`; `value` usa os tipos de `src/grid.ts`. `local: undefined` significa ausência. A API recebe dados internos tipados; #7 deve validar dados externos antes de chamar essa API.
+- `CellEdit` discrimina `terrain`, `danger` e `local` pelo campo `component`; `value` usa os tipos de `src/grid.ts`. `local: undefined` significa ausência. A API recebe dados internos tipados; `decodeRegion` valida dados externos antes de chamar essa API.
 - `RegionHistory` em `src/history.ts` recebe o mapa inicial. Expõe `current`, `canUndo`, `canRedo`, `apply(region): void`, `undo(): boolean`, `redo(): boolean`. `current` devolve cópia independente; a classe copia os dados recebidos. O estado do mapa é dado simples compatível com JSON e `structuredClone`.
-- `commitRegion(next: GeneratedRegion)` em `src/main.ts` aplica uma ação ao histórico, obtém `history.current` e renderiza. Novas ações de importação ou alternância de rio devem entrar por esse ponto para participar do histórico.
-- #7 deve salvar o mapa editado completo, `region.options` aplicadas e todos os contadores. Não deve reconstruir o mapa apenas pela semente nem ler opções pendentes do formulário. Uma versão do arquivo é separada de `region.version`.
+- `commitRegion(next: GeneratedRegion)` em `src/main.ts` aplica uma ação ao histórico, obtém `history.current`, renderiza e salva o mapa. Novas ações de importação ou alternância de rio entram por esse ponto para participar do histórico.
+- A persistência salva o mapa editado completo, `region.options` aplicadas e todos os contadores. Não reconstrói o mapa apenas pela semente nem lê opções pendentes do formulário. Uma versão do arquivo é separada de `region.version`.
 - `GeneratedRegion.river` contém `{ enabled: boolean; path: string[] }`. Edição e sorteios individuais preservam o percurso; o histórico copia o objeto inteiro. Alternar o rio aplica um snapshot pelo mesmo histórico. O arquivo deve guardar o percurso completo, não reconstruí-lo pela semente.
+
+## Salvamento e arquivos (#7)
+
+- O aplicativo salva automaticamente cada alteração confirmada, geração, importação, desfazer e refazer em `localStorage`, na chave `hexmapbuilder.current`.
+- Recarregar restaura os dados editados exatos, as opções aplicadas, os contadores de sorteio e o caminho do rio. Não gera novamente pela semente.
+- O histórico, a seleção e os campos ainda não aplicados não persistem. O histórico começa vazio após recarregar.
+- **Exportar mapa** baixa `hexmapbuilder-mapa.json`. Guarde cópias: o navegador pode apagar seus dados locais; não há conta nem nuvem.
+- **Importar mapa** valida o arquivo inteiro antes de pedir confirmação. Cancelar ou rejeitar conserva mapa, histórico e salvamento. Importação aceita pode ser desfeita e refeita na sessão.
+- Falhas de leitura ou escrita aparecem na tela. Falha de escrita conserva a última cópia salva; o mapa atual continua editável e exportável. **Tentar salvar novamente** permite repetir a escrita.
+- Um salvamento inválido ou inacessível não é sobrescrito automaticamente. A substituição exige confirmação no botão de nova tentativa.
+- `src/persistence.ts` define `encodeRegion(region: GeneratedRegion): string` e `decodeRegion(text: string): GeneratedRegion`.
+- O documento tem `format: "hexmapbuilder"`, `schemaVersion: 1` e `region`. A versão do arquivo é separada da versão de geração atual. Não há migração de versões antigas.
+- O arquivo guarda versão, opções, densidade, centro, contadores, rio e todas as células editadas. Geometria é reconstruída pela grade canônica, nunca aceita do arquivo.
+- A validação rejeita campos desconhecidos, valores inválidos, células ausentes/repetidas/desordenadas, coordenadas não canônicas, base ausente/deslocada, contadores não inteiros seguros, nomes inválidos e caminhos de rio inválidos.
+- O limite é 1 MiB em UTF-8. Nomes e sementes preservam exatamente o texto aceito, inclusive espaços e caracteres de marcação. A base permanece separada do local opcional em 0506.
+- Rio desativado exige caminho vazio; ativado exige caminho sem repetição, com células adjacentes, da borda norte à borda sul.
 
 ## Planejamento
 
