@@ -33,7 +33,7 @@
 - `PLAYWRIGHT_PORT=4191 node node_modules/@playwright/test/cli.js test --reporter=line` — 109 testes passam: 42 existentes e 67 novos. Executa a configuração do script `test:e2e` diretamente.
 - `git diff --check` — passa.
 - `git merge integration/spec-2-mvp` — já atualizado na base indicada acima; ancestralidade confirmada com `git merge-base --is-ancestor integration/spec-2-mvp HEAD`.
-- A suíte unitária completa não é executada aqui. O coordenador reserva essa execução para depois da revisão final.
+- O worker não executa a suíte unitária completa nesta etapa. A execução final do coordenador está registrada ao fim deste relatório.
 
 ## Teste primeiro: resultado real
 
@@ -71,7 +71,7 @@
 - Não foi usada impressora física. Confira a régua de 50 mm no papel, com A4, escala 100%, sem margens extras nem cabeçalhos/rodapés.
 - Não foram testados Firefox, Safari, dispositivos móveis físicos ou leitores de tela reais. A evidência móvel usa viewport Chromium de 390 px.
 - A validação automática e visual não substitui uma auditoria completa de acessibilidade.
-- Revisão final e execução unitária completa pertencem ao coordenador da integração. Esta entrega não publica, não abre PR e não altera o tracker.
+- O worker não publica, não abre PR e não altera o tracker. O coordenador faz a revisão final e registra a execução unitária completa abaixo.
 
 ## Correções da revisão final — 10-11-2026
 
@@ -89,7 +89,16 @@
 - A geração e o sorteio individual compartilham `dangerFromRoll`. Os seis limites de d6 permanecem cobertos nos dois chamadores; streams, versão, contadores e probabilidades não mudam.
 - `npx vitest run src/generation.test.ts src/editing.test.ts` — 41 testes passam antes e depois da extração.
 - Os testes de integração, persistência e rio compartilham `tests/helpers/export-map.ts` para baixar e decodificar UTF-8. As verificações de arquivos e fluxos permanecem nos chamadores.
-- `npm test` (`vitest run --changed`) — 117 testes passam em sete arquivos. Não é uma execução da suíte unitária completa; essa execução permanece reservada ao coordenador.
+- `npm test` (`vitest run --changed`) — 117 testes passam em sete arquivos. Não é uma execução da suíte unitária completa; o resultado completo do coordenador está registrado abaixo.
 - `PLAYWRIGHT_PORT=4192 npm run test:e2e -- --reporter=line` — todos os 111 testes de navegador passam, incluindo os dois casos novos. Registro: `/tmp/hexmap-final-browser.log`.
 - `npm run typecheck`, `npm run lint`, `npm run build` e `git diff --check` — passam.
+
+## Verificação final da integração — 2026-11-10
+
+- Base verificada: `7e8cfe41e50bb94c0ae5ddf32b76472a8a7fb94e`, após as cinco correções de revisão.
+- `./node_modules/.bin/vitest run` — suíte completa autorizada uma vez: **121 testes passam em oito arquivos**.
+- `PLAYWRIGHT_PORT=4190 npm run test:e2e -- --reporter=line` — **111 testes de navegador passam**, incluindo 64 combinações de geração e as duas regressões de legenda.
+- `npm run typecheck`, `npm run lint`, `npm run build` e `git diff bb14ca503262fd6b2e32314cd111550600bb36c5...HEAD --check` — passam.
+- As quatro observações de Standards e a observação de Spec estão corrigidas. As capturas desktop e móvel da legenda foram conferidas também pelo coordenador.
+- Os limites manuais acima permanecem: impressora física, outros navegadores, dispositivos e leitores de tela reais não foram testados.
 - As cinco observações aceitas estão corrigidas. As limitações de validação física e de navegadores descritas acima permanecem.
