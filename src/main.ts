@@ -1,9 +1,12 @@
 import '@fontsource-variable/literata';
 import './style.css';
-import { densities, dangerNames, type Density, type HexCell } from './grid';
+import { densities, dangerNames, terrains, localCategories, type Density, type HexCell, type Terrain, type Danger, type LocalCategory } from './grid';
 import { defaultOptions, generateRegion, terrainNames, terrainPositions, type GenerationOptions } from './generation';
 import { mapSheet, regionKey, cellSymbol, generationOptionsLabel } from './map-view';
 import { printMap, printKey } from './print-view';
+import { editCell, rerollComponent, MAX_LOCAL_NAME_LENGTH, type RerollComponent } from './editing';
+import { RegionHistory } from './history';
+import type { GeneratedRegion } from './generation';
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Elemento principal não encontrado.');
@@ -43,6 +46,11 @@ app.innerHTML = `
       <label><input id="print-danger" type="checkbox" /> Mostrar perigo no mapa impresso</label>
       <p>A chave sempre inclui todos os locais, a base e o perigo. Ela imprime em páginas separadas; não entregue essas páginas aos jogadores.</p>
     </fieldset>
+    <div class="history-controls" aria-label="Histórico da sessão">
+      <button id="undo" type="button" disabled>Desfazer</button>
+      <button id="redo" type="button" disabled>Refazer</button>
+      <span>Histórico desta sessão · inclui a substituição do mapa.</span>
+    </div>
     <div class="workspace">
       <aside class="inspector" aria-label="Consulta e instruções">
         <section>
@@ -50,6 +58,21 @@ app.innerHTML = `
           <div id="selection" role="status" aria-live="polite" aria-atomic="true">
             <p class="empty-selection">Seu mapa começa com um olhar.</p>
             <p>Selecione um hexágono para consultar terreno, perigo, local e base central.</p>
+          </div>
+          <div id="cell-editor" class="cell-editor" hidden>
+            <label>Terreno do hexágono<select id="edit-terrain">${terrains.map(terrain => `<option>${terrain}</option>`).join('')}</select></label>
+            <button type="button" data-reroll="terrain">Gerar terreno novamente</button>
+            <label>Perigo do hexágono<select id="edit-danger">${([1, 2, 3, 4] as const).map(danger => `<option value="${danger}">${dangerNames[danger]}</option>`).join('')}</select></label>
+            <button type="button" data-reroll="danger">Gerar perigo novamente</button>
+            <form id="local-form" aria-label="Editar local">
+              <label>Nome do local<input id="local-name" required maxlength="${MAX_LOCAL_NAME_LENGTH}" autocomplete="off" aria-describedby="local-help" /></label>
+              <label>Categoria do local<select id="local-category">${localCategories.map(category => `<option>${category}</option>`).join('')}</select></label>
+              <button type="submit">Aplicar local</button>
+              <button id="remove-local" type="button">Remover local</button>
+            </form>
+            <button type="button" data-reroll="local">Gerar local novamente</button>
+            <p id="local-help">Adicione ou altere o local opcional. A base central é permanente e separada.</p>
+            <p>Gerar terreno usa o terreno atual deste hexágono como referência. Os vizinhos não mudam.</p>
           </div>
         </section>
         <section>
@@ -70,12 +93,14 @@ app.innerHTML = `
     </div>
     <div id="region-key"></div>
     <footer class="app-footer">
-      <p>Terrenos, locais, perigo e base central · ainda sem edição ou salvamento.</p>
+      <p>Edição independente com desfazer e refazer · ainda sem salvamento.</p>
       <p>Vetores Kenney (CC0) e desenhos próprios. Feito para histórias que começam pequenas.</p>
     </footer>
   </main>`;
 
 let region = generateRegion(densities.compacta, defaultOptions);
+const history = new RegionHistory(region);
+let selectedCoordinate: string | undefined;
 const form = app.querySelector<HTMLFormElement>('#generation-form')!;
 function readOptions(): GenerationOptions {
   const fields = new FormData(form);
@@ -98,10 +123,57 @@ form.addEventListener('submit', event => {
   event.preventDefault();
   if (!window.confirm('Substituir todo o mapa por uma nova região? A seleção atual será descartada.')) return;
   const options = readOptions();
-  region = generateRegion(densities.compacta, options);
-  renderRegion();
+  selectedCoordinate = undefined;
+  const key = app.querySelector<HTMLDetailsElement>('.region-key');
+  if (key) key.open = false;
+  commitRegion(generateRegion(densities.compacta, options));
 });
 const selection = app.querySelector<HTMLDivElement>('#selection')!;
+const editor = app.querySelector<HTMLDivElement>('#cell-editor')!;
+const terrainSelect = app.querySelector<HTMLSelectElement>('#edit-terrain')!;
+const dangerSelect = app.querySelector<HTMLSelectElement>('#edit-danger')!;
+const localName = app.querySelector<HTMLInputElement>('#local-name')!;
+const localCategory = app.querySelector<HTMLSelectElement>('#local-category')!;
+const removeLocal = app.querySelector<HTMLButtonElement>('#remove-local')!;
+const undoButton = app.querySelector<HTMLButtonElement>('#undo')!;
+const redoButton = app.querySelector<HTMLButtonElement>('#redo')!;
+
+function commitRegion(next: GeneratedRegion) {
+  history.apply(next);
+  region = history.current;
+  renderRegion();
+}
+terrainSelect.addEventListener('change', () => {
+  if (selectedCoordinate) commitRegion(editCell(region, selectedCoordinate, { component: 'terrain', value: terrainSelect.value as Terrain }));
+});
+dangerSelect.addEventListener('change', () => {
+  if (selectedCoordinate) commitRegion(editCell(region, selectedCoordinate, { component: 'danger', value: Number(dangerSelect.value) as Danger }));
+});
+localName.addEventListener('input', () => localName.setCustomValidity(''));
+app.querySelector('#local-form')!.addEventListener('submit', event => {
+  event.preventDefault();
+  if (!selectedCoordinate) return;
+  if (!localName.value.trim()) {
+    localName.setCustomValidity('Informe um nome que não seja apenas espaços.');
+    localName.reportValidity();
+    return;
+  }
+  commitRegion(editCell(region, selectedCoordinate, {
+    component: 'local', value: { name: localName.value, category: localCategory.value as LocalCategory },
+  }));
+});
+removeLocal.addEventListener('click', () => {
+  if (selectedCoordinate) commitRegion(editCell(region, selectedCoordinate, { component: 'local', value: undefined }));
+});
+app.querySelectorAll<HTMLButtonElement>('[data-reroll]').forEach(button => button.addEventListener('click', () => {
+  if (selectedCoordinate) commitRegion(rerollComponent(region, selectedCoordinate, button.dataset.reroll as RerollComponent));
+}));
+undoButton.addEventListener('click', () => {
+  if (history.undo()) { region = history.current; renderRegion(); }
+});
+redoButton.addEventListener('click', () => {
+  if (history.redo()) { region = history.current; renderRegion(); }
+});
 app.querySelector<HTMLButtonElement>('.print-button')!.addEventListener('click', () => window.print());
 window.addEventListener('beforeprint', () => {
   document.querySelector('#print-output')?.remove();
@@ -117,6 +189,14 @@ window.addEventListener('beforeprint', () => {
 window.addEventListener('afterprint', () => document.querySelector('#print-output')?.remove());
 
 function selectHex(element: SVGGElement, density: Density, cell: HexCell) {
+  selectedCoordinate = cell.coordinate;
+  editor.hidden = false;
+  terrainSelect.value = cell.terrain;
+  dangerSelect.value = String(cell.danger);
+  localName.value = cell.local?.name ?? '';
+  localName.setCustomValidity('');
+  localCategory.value = cell.local?.category ?? 'povoado';
+  removeLocal.disabled = !cell.local;
   app!.querySelectorAll('[aria-pressed="true"]').forEach(previous => previous.setAttribute('aria-pressed', 'false'));
   element.setAttribute('aria-pressed', 'true');
   selection.innerHTML = `<p class="selection-density">${density.label}</p>
@@ -138,14 +218,28 @@ function selectHex(element: SVGGElement, density: Density, cell: HexCell) {
 }
 
 function renderRegion() {
+  const active = document.activeElement as HTMLElement | SVGElement | null;
+  const focusedIndex = Array.from(app!.querySelectorAll('.hex')).indexOf(active!);
+  const tabIndex = Array.from(app!.querySelectorAll('.hex')).findIndex(hex => hex.getAttribute('tabindex') === '0');
+  const keyOpen = app!.querySelector<HTMLDetailsElement>('.region-key')?.open ?? false;
   const { density, cells } = region;
   const sheet = app!.querySelector<HTMLElement>('#comparison')!;
   mapSheet(sheet, region);
   regionKey(app!.querySelector<HTMLElement>('#region-key')!, region);
+  const key = app!.querySelector<HTMLDetailsElement>('.region-key');
+  if (key) key.open = keyOpen;
+  undoButton.disabled = !history.canUndo;
+  redoButton.disabled = !history.canRedo;
+  editor.hidden = true;
   selection.innerHTML = '<p>Selecione um hexágono para consultar terreno, perigo, local e base central.</p>';
   app!.querySelector('#generation-summary')!.textContent =
     `Mapa atual · Semente: ${JSON.stringify(region.options.seed)} · ${region.version} · Centro: ${region.centerCoordinate} · ${generationOptionsLabel(region.options)}`;
   const hexes = Array.from(sheet.querySelectorAll<SVGGElement>('.hex'));
+  const selectedIndex = cells.findIndex(cell => cell.coordinate === selectedCoordinate);
+  if (selectedIndex >= 0) selectHex(hexes[selectedIndex]!, density, cells[selectedIndex]!);
+  hexes.forEach((hex, index) => hex.setAttribute('tabindex', index === Math.max(0, tabIndex) ? '0' : '-1'));
+  if (focusedIndex >= 0) hexes[focusedIndex]?.focus();
+  else if (active instanceof HTMLButtonElement && active.disabled && selectedIndex >= 0) hexes[selectedIndex]!.focus();
   function moveFocus(index: number) {
     hexes.forEach((hex, position) => hex.setAttribute('tabindex', position === index ? '0' : '-1'));
   }

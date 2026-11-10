@@ -145,6 +145,33 @@
 - Esses pacotes são ferramentas de desenvolvimento. Eles não integram o aplicativo publicado.
 - Não aplique `npm audit fix --force` sem verificar as mudanças de versão e os testes.
 
+## Edição e histórico da sessão (#6)
+
+- Selecione um hexágono com clique ou Enter/Espaço. Use os campos do painel para editar terreno, perigo e local opcional.
+- O formulário de local adiciona, renomeia ou troca a categoria. Remover local não remove a Base das Expedições em 0506.
+- Nomes aceitam de 1 a 120 unidades UTF-16, exceto texto composto apenas de espaços. O aplicativo preserva o texto aceito, inclusive espaços e caracteres de marcação, como texto literal.
+- Cada botão de geração altera somente seu componente no hexágono selecionado. Os demais componentes, vizinhos, base e metadados aplicados permanecem iguais.
+- **Política da aplicação, não regra atribuída à fonte:** gerar terreno individual usa a posição do terreno ATUAL do próprio hexágono como referência na tabela de transição 2d6. Não usa vizinho e não propaga a alteração.
+- As variantes equivalentes (Deserto/Ártico, Floresta/Selva, Rio/Litoral) compartilham a posição da tabela. O resultado usa as variantes aplicadas ao mapa, não os valores ainda não aplicados no formulário de geração.
+- Terreno consome 2d6; resultado 12 consome mais 2d6 na tabela inicial. Perigo consome 1d6 (1 → Seguro, 2–3 → Inseguro, 4–5 → Arriscado, 6 → Mortal).
+- Local consome 1d6 para presença. Apenas 1 cria local e consome mais dois d6, para categoria e nome. Os outros resultados removem o local opcional.
+- A geração inicial `region-v3` e seus fluxos permanecem iguais. A edição usa fluxos separados `edit-v1` com FNV-1a UTF-16 + Mulberry32.
+- A semente de cada ação é a concatenação de `region.options.seed`, NUL, `edit-v1`, NUL, componente (`terrain`, `danger`, `local`), NUL e contador decimal desse componente ANTES da ação.
+- `GeneratedRegion.rerolls` contém `{ terrain: number, local: number, danger: number }`, inicialmente zero. Cada geração individual incrementa só seu contador uma vez, mesmo quando o resultado visível é igual. A contagem é por componente e mapa, não por hexágono; ações de outros componentes não consomem sua sequência.
+- Edições manuais não consomem sorteios. Gerar um mapa inteiro reinicia os contadores. Cancelar a confirmação não altera mapa nem histórico.
+- Desfazer/refazer restaura snapshots completos, inclusive opções aplicadas e contadores. Uma nova alteração após desfazer elimina refazer; uma edição sem mudança não cria entrada nem elimina refazer. Sorteio com resultado igual cria entrada, pois muda o contador.
+- O histórico mantém todas as ações da sessão, sem limite artificial; usa memória proporcional ao número de snapshots. Recarregar encerra esse histórico. Persistência pertence ao #7.
+- A seleção, foco, abertura da chave e campos de geração ainda não aplicados são estado da interface, não snapshots do mapa. Edição preserva a seleção. Gerar mapa inteiro limpa a seleção e fecha a chave.
+
+### Contratos para salvar/importar (#7) e rio (#8)
+
+- `editCell(region: GeneratedRegion, coordinate: string, edit: CellEdit): GeneratedRegion` e `rerollComponent(region: GeneratedRegion, coordinate: string, component: RerollComponent, rollDie?: () => number): GeneratedRegion` ficam em `src/editing.ts`. Coordenada desconhecida lança erro antes de consumir dados. O dado opcional é uma função que retorna inteiros de 1 a 6 para testes controlados.
+- `CellEdit` discrimina `terrain`, `danger` e `local` pelo campo `component`; `value` usa os tipos de `src/grid.ts`. `local: undefined` significa ausência. A API recebe dados internos tipados; #7 deve validar dados externos antes de chamar essa API.
+- `RegionHistory` em `src/history.ts` recebe o mapa inicial. Expõe `current`, `canUndo`, `canRedo`, `apply(region): void`, `undo(): boolean`, `redo(): boolean`. `current` devolve cópia independente; a classe copia os dados recebidos. O estado do mapa é dado simples compatível com JSON e `structuredClone`.
+- `commitRegion(next: GeneratedRegion)` em `src/main.ts` aplica uma ação ao histórico, obtém `history.current` e renderiza. Novas ações de importação ou alternância de rio devem entrar por esse ponto para participar do histórico.
+- #7 deve salvar o mapa editado completo, `region.options` aplicadas e todos os contadores. Não deve reconstruir o mapa apenas pela semente nem ler opções pendentes do formulário. Uma versão do arquivo é separada de `region.version`.
+- #8 deve adicionar o caminho do rio como dado do mapa. Edição e sorteios individuais preservam campos adicionais por espalhamento; o histórico copia o objeto inteiro. Não recalcular o caminho nesses fluxos. Uma ação de alternância deve aplicar novo snapshot pelo mesmo histórico.
+
 ## Planejamento
 
 - [PRD do MVP](https://github.com/yuritoledo/hexmapbuilder/issues/1)

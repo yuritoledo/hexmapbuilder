@@ -138,3 +138,24 @@ test('native print uses applied metadata and fits a maximum-length seed within A
   expect(bounds.right).toBeLessThanOrEqual(198.1);
   await page.pdf({ path: testInfo.outputPath('semente-longa.pdf'), preferCSSPageSize: true });
 });
+
+test('prints current edits and undo without changing history or secrecy preferences', async ({ page }) => {
+  await page.goto('/');
+  const center = page.getByRole('button', { name: /^Hexágono 0506 ·/ });
+  await center.click();
+  await page.getByLabel('Nome do local').fill('Abrigo editado <seguro> & base');
+  await page.getByRole('button', { name: 'Aplicar local', exact: true }).click();
+  const editedRows = await page.locator('#region-key tbody tr').allTextContents();
+  await page.getByRole('checkbox', { name: 'Mostrar locais no mapa impresso' }).check();
+  await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
+  expect(await page.locator('#print-output .print-key tbody tr').allTextContents()).toEqual(editedRows);
+  await expect(page.locator('#print-output [data-expedition-base]')).toHaveCount(1);
+  await expect(page.locator('#print-output .hex[aria-label^="Hexágono 0506"]')).toHaveAttribute('aria-label', /Abrigo editado/);
+  await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+  await page.getByRole('button', { name: 'Desfazer', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'Mostrar locais no mapa impresso' })).toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'Mostrar perigo no mapa impresso' })).not.toBeChecked();
+  await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
+  await expect(page.locator('#print-output .print-key')).not.toContainText('Abrigo editado');
+  await expect(page.getByRole('button', { name: 'Refazer', exact: true })).toBeEnabled();
+});
