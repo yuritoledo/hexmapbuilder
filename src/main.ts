@@ -6,6 +6,7 @@ import { mapSheet, regionKey, cellSymbol, generationOptionsLabel } from './map-v
 import { editCell, rerollComponent, MAX_LOCAL_NAME_LENGTH, type RerollComponent } from './editing';
 import { RegionHistory } from './history';
 import type { GeneratedRegion } from './generation';
+import { decodeRegion, encodeRegion, STORAGE_KEY, MAX_FILE_BYTES } from './persistence';
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Elemento principal não encontrado.');
@@ -44,6 +45,16 @@ app.innerHTML = `
       <button id="redo" type="button" disabled>Refazer</button>
       <span>Histórico desta sessão · inclui a substituição do mapa.</span>
     </div>
+    <section class="storage-controls" aria-label="Salvar e transferir mapa">
+      <div class="storage-actions">
+        <button id="export-map" type="button">Exportar mapa</button>
+        <label>Importar mapa <input id="import-map" type="file" accept=".json,application/json"></label>
+        <button id="retry-save" type="button">Tentar salvar novamente</button>
+      </div>
+      <p id="storage-status" role="status"></p>
+      <p id="file-status" role="status"></p>
+      <p>Salvamento automático neste navegador. Exporte uma cópia para guardar ou transferir o mapa. O histórico não é salvo.</p>
+    </section>
     <div class="workspace">
       <aside class="inspector" aria-label="Consulta e instruções">
         <section>
@@ -86,12 +97,72 @@ app.innerHTML = `
     </div>
     <div id="region-key"></div>
     <footer class="app-footer">
-      <p>Edição independente com desfazer e refazer · ainda sem salvamento.</p>
+      <p>Edição independente com desfazer e refazer · salvamento automático local.</p>
       <p>Vetores Kenney (CC0) e desenhos próprios. Feito para histórias que começam pequenas.</p>
     </footer>
   </main>`;
 
 let region = generateRegion(densities.compacta, defaultOptions);
+const storageStatus = app.querySelector<HTMLParagraphElement>('#storage-status')!;
+let storageBlocked = false;
+try {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved !== null) region = decodeRegion(saved);
+} catch {
+  storageBlocked = true;
+  storageStatus.textContent = 'Não foi possível recuperar o mapa salvo. Ele não será sobrescrito. Exporte o mapa atual ou tente salvar novamente para substituir o salvo.';
+}
+
+function saveRegion() {
+  if (storageBlocked) return;
+  try {
+    localStorage.setItem(STORAGE_KEY, encodeRegion(region));
+    storageStatus.textContent = 'Salvo neste navegador. Mantenha também uma cópia exportada.';
+  } catch {
+    storageStatus.textContent = 'Não foi possível salvar neste navegador. As alterações estão apenas nesta sessão. Exporte o mapa ou tente salvar novamente.';
+  }
+}
+app.querySelector('#retry-save')!.addEventListener('click', () => {
+  if (storageBlocked && !window.confirm('Substituir o salvamento que não pôde ser recuperado pelo mapa atual?')) return;
+  storageBlocked = false;
+  saveRegion();
+});
+const fileStatus = app.querySelector<HTMLParagraphElement>('#file-status')!;
+app.querySelector('#export-map')!.addEventListener('click', () => {
+  try {
+    const url = URL.createObjectURL(new Blob([encodeRegion(region)], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'hexmapbuilder-mapa.json';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+    fileStatus.textContent = 'Arquivo exportado. Guarde esta cópia do mapa.';
+  } catch {
+    fileStatus.textContent = 'Não foi possível exportar o mapa. Tente novamente.';
+  }
+});
+const importInput = app.querySelector<HTMLInputElement>('#import-map')!;
+importInput.addEventListener('change', async () => {
+  const file = importInput.files?.[0];
+  if (!file) return;
+  importInput.value = '';
+  importInput.disabled = true;
+  try {
+    if (file.size > MAX_FILE_BYTES) throw new Error('Arquivo muito grande. O limite é 1 MiB.');
+    const imported = decodeRegion(await file.text());
+    if (!window.confirm('Substituir o mapa atual pelo mapa importado? Você pode desfazer nesta sessão.')) {
+      fileStatus.textContent = 'Importação cancelada. O mapa atual não mudou.';
+      return;
+    }
+    selectedCoordinate = undefined;
+    commitRegion(imported);
+    fileStatus.textContent = 'Mapa importado. O histórico anterior continua disponível nesta sessão.';
+  } catch (error) {
+    fileStatus.textContent = error instanceof Error ? `Não foi possível importar. ${error.message}` : 'Não foi possível ler o arquivo. O mapa atual não mudou.';
+  } finally {
+    importInput.disabled = false;
+  }
+});
 const history = new RegionHistory(region);
 let selectedCoordinate: string | undefined;
 const form = app.querySelector<HTMLFormElement>('#generation-form')!;
@@ -135,6 +206,7 @@ function commitRegion(next: GeneratedRegion) {
   history.apply(next);
   region = history.current;
   renderRegion();
+  saveRegion();
 }
 terrainSelect.addEventListener('change', () => {
   if (selectedCoordinate) commitRegion(editCell(region, selectedCoordinate, { component: 'terrain', value: terrainSelect.value as Terrain }));
@@ -162,10 +234,10 @@ app.querySelectorAll<HTMLButtonElement>('[data-reroll]').forEach(button => butto
   if (selectedCoordinate) commitRegion(rerollComponent(region, selectedCoordinate, button.dataset.reroll as RerollComponent));
 }));
 undoButton.addEventListener('click', () => {
-  if (history.undo()) { region = history.current; renderRegion(); }
+  if (history.undo()) { region = history.current; renderRegion(); saveRegion(); }
 });
 redoButton.addEventListener('click', () => {
-  if (history.redo()) { region = history.current; renderRegion(); }
+  if (history.redo()) { region = history.current; renderRegion(); saveRegion(); }
 });
 app.querySelector<HTMLButtonElement>('.print-button')!.addEventListener('click', () => window.print());
 
@@ -256,3 +328,4 @@ function renderRegion() {
 }
 
 renderRegion();
+saveRegion();

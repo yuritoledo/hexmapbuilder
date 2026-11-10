@@ -5,7 +5,7 @@
 - Estado atual: terrenos, perigo e locais por semente, chave na tela e Base das Expedições permanente no centro.
 - A grade B foi aprovada: 108 hexágonos, ponta para cima e margens mínimas de 12 mm.
 - Perigo real aparece como 1–4 símbolos de terreno. O centro contém um vilarejo, a Base das Expedições.
-- Edição e salvamento entram nos próximos tickets.
+- Edição independente, histórico da sessão, salvamento local e transferência por arquivo JSON.
 
 ## Executar
 
@@ -25,7 +25,7 @@
 - Selecione **Gerar região** e confirme a substituição do mapa atual.
 - Cancelar conserva o mapa, os metadados e a seleção. Os campos continuam com os valores digitados.
 - Os campos são opções para a próxima geração. O resumo e a folha mostram o mapa atual.
-- A abertura gera `terras-01` com as opções padrão. Recarregar perde o mapa atual.
+- A abertura recupera o mapa salvo neste navegador. Sem salvamento, gera `terras-01` com as opções padrão.
 - A mesma semente, opções, grade e versão produzem a mesma região.
 - A grade aprovada tem 9 colunas × 12 linhas, 108 hexágonos e 19 mm entre lados no papel.
 - A folha usa A4 retrato, hexágonos regulares com ponta para cima e conteúdo a pelo menos 12 mm das bordas.
@@ -100,6 +100,7 @@
 - `src/locals.ts`: política de presença, categoria e nomes originais dos locais.
 - `src/map-view.ts`: desenha a folha, a legenda ativa e os símbolos locais.
 - `src/main.ts`: controla formulário, confirmação, geração, foco e seleção. Mudar o foco não muda a seleção.
+- `src/persistence.ts`: formato de arquivo versionado, validação externa e restauração canônica do mapa editado.
 - `src/style.css`: define a apresentação responsiva e as regras de impressão.
 - **Vitest:** verifica geometria, tabelas, probabilidades de 2d6, vizinhança, variantes e repetição por semente.
 - **Playwright + Chromium:** verifica abertura, mouse, teclado, consulta móvel e PDF.
@@ -161,6 +162,22 @@
 - `commitRegion(next: GeneratedRegion)` em `src/main.ts` aplica uma ação ao histórico, obtém `history.current` e renderiza. Novas ações de importação ou alternância de rio devem entrar por esse ponto para participar do histórico.
 - #7 deve salvar o mapa editado completo, `region.options` aplicadas e todos os contadores. Não deve reconstruir o mapa apenas pela semente nem ler opções pendentes do formulário. Uma versão do arquivo é separada de `region.version`.
 - #8 deve adicionar o caminho do rio como dado do mapa. Edição e sorteios individuais preservam campos adicionais por espalhamento; o histórico copia o objeto inteiro. Não recalcular o caminho nesses fluxos. Uma ação de alternância deve aplicar novo snapshot pelo mesmo histórico.
+
+## Salvamento e arquivos (#7)
+
+- O aplicativo salva automaticamente cada alteração confirmada, geração, importação, desfazer e refazer em `localStorage`, na chave `hexmapbuilder.current`.
+- Recarregar restaura os dados editados exatos, as opções aplicadas, os contadores de sorteio e o caminho do rio. Não gera novamente pela semente.
+- O histórico, a seleção e os campos ainda não aplicados não persistem. O histórico começa vazio após recarregar.
+- **Exportar mapa** baixa `hexmapbuilder-mapa.json`. Guarde cópias: o navegador pode apagar seus dados locais; não há conta nem nuvem.
+- **Importar mapa** valida o arquivo inteiro antes de pedir confirmação. Cancelar ou rejeitar conserva mapa, histórico e salvamento. Importação aceita pode ser desfeita e refeita na sessão.
+- Falhas de leitura ou escrita aparecem na tela. Falha de escrita conserva a última cópia salva; o mapa atual continua editável e exportável. **Tentar salvar novamente** permite repetir a escrita.
+- Um salvamento inválido ou inacessível não é sobrescrito automaticamente. A substituição exige confirmação no botão de nova tentativa.
+- `src/persistence.ts` define `encodeRegion(region: GeneratedRegion): string` e `decodeRegion(text: string): GeneratedRegion`.
+- O documento tem `format: "hexmapbuilder"`, `schemaVersion: 1` e `region`. A versão do arquivo é separada da versão de geração atual. Não há migração de versões antigas.
+- O arquivo guarda versão, opções, densidade, centro, contadores, rio e todas as células editadas. Geometria é reconstruída pela grade canônica, nunca aceita do arquivo.
+- A validação rejeita campos desconhecidos, valores inválidos, células ausentes/repetidas/desordenadas, coordenadas não canônicas, base ausente/deslocada, contadores não inteiros seguros, nomes inválidos e caminhos de rio inválidos.
+- O limite é 1 MiB em UTF-8. Nomes e sementes preservam exatamente o texto aceito, inclusive espaços e caracteres de marcação. A base permanece separada do local opcional em 0506.
+- Rio desativado exige caminho vazio; ativado exige caminho sem repetição, com células adjacentes, da borda norte à borda sul.
 
 ## Planejamento
 
