@@ -94,6 +94,11 @@ summary { font-size: 13px; font-weight: 600; padding: 6px 0; }
 .sheet-caption { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 12px 0 0; }
 .app-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; border-top: 1px solid var(--line); margin-top: 36px; padding-top: 12px; color: var(--muted); font-size: 12px; line-height: 1.6; }
 .app-footer p { margin: 0; }
+.print-controls { max-width: 1030px; margin: 0 auto 24px; padding: 16px; border: 1px solid var(--line); font-size: 14px; }
+.print-controls legend { font-weight: 600; padding: 0 6px; }
+.print-controls label { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.print-controls input { width: 18px; height: 18px; accent-color: var(--ink); }
+.print-controls p { max-width: 70ch; line-height: 1.6; color: var(--muted); }
 .region-key { max-width: 1030px; margin: 28px auto 0; border-top: 1px solid var(--line); padding-top: 16px; font-size: 14px; line-height: 1.6; }
 .region-key summary { font-size: 16px; }
 .region-key p { color: var(--muted); }
@@ -127,11 +132,29 @@ summary { font-size: 13px; font-weight: 600; padding: 6px 0; }
   #selection { min-height: 90px; }
   .app-footer { margin-top: 28px; }
 }
+#print-output { display: none; }
 @page { size: A4 portrait; margin: 0; }
+@page map { size: A4 portrait; margin: 0; }
+@page key { size: A4 portrait; margin: 12mm; }
 @media print {
   :root, body { background: white; }
   body, main, .workspace, .sheets { display: block; margin: 0; padding: 0; max-width: none; }
   .history-controls, #region-key, .generation-controls, .app-header, .intro, .inspector, .sheet-heading, .sheet-caption, .app-footer, .skip-link { display: none !important; }
+  #app { display: none; }
+  #print-output { display: block; }
+  #print-output .comparison { page: map; }
+  .print-key { page: key; break-before: page; margin: 0; padding: 0; border: 0; max-width: none; color: black; font-size: 10pt; line-height: 1.35; }
+  .print-key h1 { font-size: 18pt; margin: 0 0 4mm; }
+  .print-key p { margin: 0 0 5mm; overflow-wrap: anywhere; color: black; }
+  .print-key table { table-layout: fixed; }
+  .print-key th, .print-key td { padding: 2mm; color: black; overflow-wrap: anywhere; }
+  .print-key thead { display: table-header-group; }
+  .print-key thead th { font-size: 10pt; }
+  .print-key tr { break-inside: avoid; }
+  .print-key th:nth-child(1) { width: 15%; }
+  .print-key th:nth-child(2) { width: 18%; }
+  .print-key th:nth-child(3) { width: 47%; }
+  .print-key th:nth-child(4) { width: 20%; }
   .comparison { width: 210mm; height: 297mm; break-after: page; break-inside: avoid; margin: 0; padding: 0; }
   .comparison:last-child { break-after: auto; }
   .paper { box-shadow: none; }

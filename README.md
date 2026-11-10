@@ -2,7 +2,7 @@
 
 - Gerador de mapas hexagonais OSR para preparar e imprimir aventuras.
 - Preto e branco, traço artesanal e interface em português brasileiro.
-- Estado atual: terrenos, perigo e locais por semente, chave na tela e Base das Expedições permanente no centro.
+- Estado atual: terrenos, perigo e locais por semente, chave na tela e impressão A4 com sigilo independente no mapa.
 - A grade B foi aprovada: 108 hexágonos, ponta para cima e margens mínimas de 12 mm.
 - Perigo real aparece como 1–4 símbolos de terreno. O centro contém um vilarejo, a Base das Expedições.
 - Edição independente, histórico da sessão, salvamento local e transferência por arquivo JSON.
@@ -61,7 +61,7 @@
 - Cada hexágono recebe um d6 de perigo na ordem de linha e coluna: 1 seguro, 2–3 inseguro, 4–5 arriscado e 6 mortal.
 - O mapa mostra respectivamente 1, 2, 3 ou 4 unidades do terreno. Essa escolha visual substitui círculo e caveiras da spec, por aprovação do usuário.
 - O centro contém um único povoado chamado Base das Expedições, representado por um vilarejo. O terreno e o perigo do centro continuam gerados normalmente, inclusive em água. Essa base é uma convenção do aplicativo, não uma regra do livro.
-- A consulta mostra o nome do perigo e a base. A impressão inclui a mesma legenda e o vilarejo.
+- A consulta mostra o nome do perigo e a base. A impressão obedece aos controles independentes de sigilo do mapa.
 - `region-v3` acrescenta locais opcionais por `local-v1`, sem mudar as sequências de terreno de `terrain-v1` nem de perigo de `danger-v1`.
 - Locais usam FNV-1a + Mulberry32 com a semente original seguida de `\0local-v1` (separador NUL). Esse fluxo independente visita as células por linha e coluna.
 - Cada célula consome um d6 de presença. **Somente 1 gera local**. Resultados 2–6 não consomem dados extras.
@@ -70,23 +70,28 @@
 - Todas as categorias podem ocorrer em qualquer terreno, inclusive água. Não há filtro, nova rolagem ou promessa de coerência geográfica.
 - `local` guarda somente nome e categoria. `expeditionBase` continua separado e permanente; o centro pode conter ambos, inclusive em água.
 - Um losango vazio indica local opcional, acima dos símbolos de terreno. Não substitui unidades de perigo nem o vilarejo da base. Nome e categoria aparecem na seleção, no nome acessível e na chave.
-- A chave desta etapa é somente para a tela. A impressão mantém o mapa com perigo, base e marcadores. Sigilo e paginação da chave pertencem ao ticket #9.
+- A chave na tela e na impressão sempre conserva os dados completos. Os controles de sigilo afetam somente o mapa impresso.
 - Não há cataclismos nem promessa de clima, costas ou rios contínuos.
 
 ## Imprimir ou salvar PDF
 
+- Antes de imprimir, escolha **Mostrar locais no mapa impresso** e **Mostrar perigo no mapa impresso**. Ambos começam desmarcados e funcionam de forma independente.
+- Ocultar locais também oculta a Base das Expedições. Ocultar perigo mostra exatamente uma unidade de terreno por hexágono e remove a legenda de perigo.
+- O mapa usa a região atual, inclusive edições. Não usa valores ainda não aplicados no formulário.
+- A chave sempre contém coordenada, terreno, local opcional, base permanente e perigo de todos os 108 hexágonos. Não entregue as páginas da chave aos jogadores.
+- A tabela repete o cabeçalho em cada página. As linhas não se dividem e os nomes longos quebram dentro das células.
 1. Selecione **Imprimir mapa**.
 2. Use papel **A4**, orientação **retrato** e escala **100%**.
 3. Desative margens adicionais, cabeçalhos e rodapés do navegador.
 4. Imprima ou selecione **Salvar como PDF**.
 5. Confira a página. A linha de conferência deve medir **50 mm**.
 
-- O CSS usa milímetros e uma página A4. Não dimensiona a folha a partir de uma captura de tela.
+- O CSS usa milímetros. O mapa ocupa uma página A4. A chave começa na página seguinte e continua em quantas páginas A4 forem necessárias.
 - A folha inclui semente, versão, terreno inicial e variantes para repetir a geração.
 - A semente aparece entre aspas no formato JSON, com espaços preservados e caracteres especiais escapados. As aspas externas não fazem parte da semente.
 - Sementes largas recebem ajuste horizontal de texto para respeitar os 12 mm de margem.
 - Controles, painel e destaque de seleção não aparecem na impressão.
-- O teste automatizado verifica uma página A4 no PDF do Chromium.
+- Os testes verificam as quatro combinações de sigilo, o conteúdo completo da chave e as páginas A4 no PDF do Chromium.
 - O teste não substitui a conferência física da impressora. Outros navegadores e impressoras precisam de conferência.
 
 ## Arquitetura e ferramentas
@@ -99,6 +104,11 @@
 - `src/generation.ts`: tabelas, dados com semente, visita da grade e metadados da região.
 - `src/locals.ts`: política de presença, categoria e nomes originais dos locais.
 - `src/map-view.ts`: desenha a folha, a legenda ativa e os símbolos locais.
+- `src/print-view.ts`: `printMap(container: HTMLElement, region: GeneratedRegion, visibility: PrintVisibility): void` cria a projeção sem alterar a região. `PrintVisibility` contém `showLocations` e `showDanger`.
+- `printKey(container: HTMLElement, region: GeneratedRegion): void` acrescenta a chave completa, sem parâmetros de sigilo. Funciona com o painel da tela fechado.
+- `beforeprint` recria `#print-output` a partir da região atual. `afterprint` remove essa cópia. O botão e a impressão nativa do navegador usam o mesmo caminho.
+- Para #7: os controles de impressão são preferências da sessão, fora de `GeneratedRegion`. Importar deve substituir a região atual, não a projeção descartável.
+- Para #8: `printMap` conserva os demais campos da região e chama `mapSheet`. Um rio deve ser uma sobreposição separada do terreno; o sigilo de local/perigo não remove o rio. Não adicione outro fluxo aleatório à impressão.
 - `src/main.ts`: controla formulário, confirmação, geração, foco e seleção. Mudar o foco não muda a seleção.
 - `src/persistence.ts`: formato de arquivo versionado, validação externa e restauração canônica do mapa editado.
 - `src/style.css`: define a apresentação responsiva e as regras de impressão.
