@@ -122,7 +122,7 @@
 - `src/print-view.ts`: `printMap(container: HTMLElement, region: GeneratedRegion, visibility: PrintVisibility): void` cria a projeção sem alterar a região. `PrintVisibility` contém `showLocations` e `showDanger`.
 - `printKey(container: HTMLElement, region: GeneratedRegion): void` acrescenta a chave completa, sem parâmetros de sigilo. Funciona com o painel da tela fechado.
 - `beforeprint` recria `#print-output` a partir da região atual. `afterprint` remove essa cópia. O botão e a impressão nativa do navegador usam o mesmo caminho.
-- Para #7: os controles de impressão são preferências da sessão, fora de `GeneratedRegion`. Importar deve substituir a região atual, não a projeção descartável.
+- Os controles de impressão são preferências da sessão, fora de `GeneratedRegion`. Importar substitui a região atual, não a projeção descartável.
 - `printMap` conserva o percurso do rio e chama `mapSheet`. O rio é uma sobreposição separada do terreno. O sigilo de local/perigo não remove o rio. A impressão não consome dados aleatórios.
 - `src/main.ts`: controla formulário, confirmação, geração, foco e seleção. Mudar o foco não muda a seleção.
 - `src/persistence.ts`: formato de arquivo versionado, validação externa e restauração canônica do mapa editado.
@@ -179,14 +179,14 @@
 - O histórico mantém todas as ações da sessão, sem limite artificial; usa memória proporcional ao número de snapshots. Recarregar encerra esse histórico. O mapa atual persiste, mas o histórico não.
 - A seleção, foco, abertura da chave e campos de geração ainda não aplicados são estado da interface, não snapshots do mapa. Edição preserva a seleção. Gerar mapa inteiro limpa a seleção e fecha a chave.
 
-### Contratos para salvar/importar (#7) e rio (#8)
+### Contratos de salvar/importar (#7) e rio (#8)
 
 - `editCell(region: GeneratedRegion, coordinate: string, edit: CellEdit): GeneratedRegion` e `rerollComponent(region: GeneratedRegion, coordinate: string, component: RerollComponent, rollDie?: () => number): GeneratedRegion` ficam em `src/editing.ts`. Coordenada desconhecida lança erro antes de consumir dados. O dado opcional é uma função que retorna inteiros de 1 a 6 para testes controlados.
 - `CellEdit` discrimina `terrain`, `danger` e `local` pelo campo `component`; `value` usa os tipos de `src/grid.ts`. `local: undefined` significa ausência. A API recebe dados internos tipados; `decodeRegion` valida dados externos antes de chamar essa API.
 - `RegionHistory` em `src/history.ts` recebe o mapa inicial. Expõe `current`, `canUndo`, `canRedo`, `apply(region): void`, `undo(): boolean`, `redo(): boolean`. `current` devolve cópia independente; a classe copia os dados recebidos. O estado do mapa é dado simples compatível com JSON e `structuredClone`.
-- `commitRegion(next: GeneratedRegion)` em `src/main.ts` aplica uma ação ao histórico, obtém `history.current`, renderiza e salva o mapa. Novas ações de importação ou alternância de rio entram por esse ponto para participar do histórico.
+- `commitRegion(next: GeneratedRegion)` em `src/main.ts` aplica uma ação ao histórico, obtém `history.current`, renderiza e salva o mapa. Ações de importação ou alternância de rio entram por esse ponto para participar do histórico.
 - A persistência salva o mapa editado completo, `region.options` aplicadas e todos os contadores. Não reconstrói o mapa apenas pela semente nem lê opções pendentes do formulário. Uma versão do arquivo é separada de `region.version`.
-- `GeneratedRegion.river` contém `{ enabled: boolean; path: string[] }`. Edição e sorteios individuais preservam o percurso; o histórico copia o objeto inteiro. Alternar o rio aplica um snapshot pelo mesmo histórico. O arquivo deve guardar o percurso completo, não reconstruí-lo pela semente.
+- `GeneratedRegion.river` contém `{ enabled: boolean; path: string[] }`. Edição e sorteios individuais preservam o percurso; o histórico copia o objeto inteiro. Alternar o rio aplica um snapshot pelo mesmo histórico. O arquivo guarda o percurso completo, não o reconstrói pela semente.
 
 ## Salvamento e arquivos (#7)
 
@@ -210,7 +210,7 @@
 - [Especificação](https://github.com/yuritoledo/hexmapbuilder/issues/2)
 - [Todos os tickets](https://github.com/yuritoledo/hexmapbuilder/issues)
 
-## Próximos tickets
+## Entregas do MVP
 
 - [Locais e perigo](https://github.com/yuritoledo/hexmapbuilder/issues/5)
 - [Edição e histórico](https://github.com/yuritoledo/hexmapbuilder/issues/6)
@@ -225,4 +225,5 @@
 - Sem cataclismos automáticos, estradas, lagos ou afluentes.
 - Sem cálculo de viagem, fichas ou masmorras prontas.
 - Inglês fica para uma versão posterior.
-- Consulte as issues antes de tratar detalhes abertos como decisões.
+- As decisões do MVP estão registradas acima e na spec. Não há decisão de produto pendente para esta entrega.
+- Confira as evidências e os limites de validação em [Validação integrada do MVP](docs/mvp-verification.md).
