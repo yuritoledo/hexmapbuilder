@@ -21,7 +21,7 @@
   .storage-controls p:empty { display: none; }
   .storage-controls [data-slot="button"] { white-space: normal; height: auto; min-height: 40px; }
   .sheets { grid-column: 2; grid-row: 1; min-width: 0; }
-  .map-sheet { width: 100%; max-width: 560px; margin-inline: auto; }
+  .map-sheet { width: 100%; margin-inline: auto; }
   .sheet-heading { align-items: center; gap: 12px; }
   .sheet-heading h2 { font-family: var(--font-serif); font-size: 18px; font-weight: 650; letter-spacing: -.03em; }
   .sheet-heading p { margin: 0; font-size: 12px; line-height: 1.4; }
