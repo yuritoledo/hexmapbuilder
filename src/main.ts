@@ -1,5 +1,8 @@
 import '@fontsource-variable/literata';
 import './style.css';
+import '@fontsource-variable/eczar';
+import '@fontsource-variable/source-sans-3';
+import './workspace.css';
 import { densities, dangerNames, terrains, localCategories, type Density, type HexCell, type Terrain, type Danger, type LocalCategory } from './grid';
 import { defaultOptions, generateRegion, terrainNames, terrainPositions, type GenerationOptions } from './generation';
 import { mapSheet, regionKey, cellSymbol, generationOptionsLabel } from './map-view';
@@ -16,59 +19,59 @@ if (!app) throw new Error('Elemento principal não encontrado.');
 app.innerHTML = `
   <a class="skip-link" href="#comparison">Ir para os mapas</a>
   <header class="app-header">
-    <a class="wordmark" href="./" aria-label="Hexmap Builder, início">
-      <svg viewBox="0 0 30 34" aria-hidden="true"><path d="M15 1 29 9v16l-14 8L1 25V9ZM1 9l14 8 14-8M15 17v16" /></svg>
-      Hexmap <span>Builder</span>
-    </a>
-    <span class="header-note">Um território. Muitas aventuras.</span>
+    <a class="wordmark" href="./" aria-label="Hexmap Builder, início">Hexmap Builder</a>
+    <div class="header-actions">
+      <div class="history-controls" aria-label="Histórico da sessão">
+        <button id="undo" type="button" disabled>Desfazer</button>
+        <button id="redo" type="button" disabled>Refazer</button>
+      </div>
+      <button id="export-map" type="button">Exportar mapa</button>
+      <label class="import-button">Importar mapa<input id="import-map" type="file" accept=".json,application/json" /></label>
+      <button class="print-button" type="button">Imprimir mapa e chave</button>
+    </div>
   </header>
   <main>
     <div class="intro">
-      <div>
-        <h1>Gere seu próximo território.</h1>
-        <p>Uma semente, uma região. Explore terrenos gerados com tabelas de 2d6 em uma folha A4.</p>
-      </div>
-      <button class="print-button" type="button">Imprimir mapa <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 13 13 3M4 3h9v9" /></svg></button>
+      <h1>A região ganha vida.</h1>
+      <p>Uma semente, uma região. Explore terrenos gerados com tabelas de 2d6 em uma folha A4.</p>
     </div>
-    <form id="generation-form" class="generation-controls" aria-label="Opções de geração">
-      <label>Semente<input name="seed" value="terras-01" required maxlength="80" autocomplete="off" /></label>
-      <label>Terreno inicial<select name="initialTerrain">
-        <option value="random">Sortear com 2d6</option>
-        ${terrainPositions.map(position => `<option value="${position}">${terrainNames(defaultOptions)[position]}</option>`).join('')}
-      </select></label>
-      <label>Deserto ou ártico<select name="arid"><option>Deserto</option><option>Ártico</option></select></label>
-      <label>Floresta ou selva<select name="forest"><option>Floresta</option><option>Selva</option></select></label>
-      <label>Rio ou litoral<select name="water"><option>Rio</option><option>Litoral</option></select></label>
-      <button class="generate-button" type="submit">Gerar região</button>
-      <p id="generation-summary" class="generation-summary" aria-live="polite"></p>
-    </form>
-    <div class="river-controls">
-      <label><input id="river-enabled" type="checkbox" aria-describedby="river-help" />Rio contínuo (adaptação opcional)</label>
-      <p id="river-help">Uma linha de norte a sul, por semente. Cruza qualquer terreno, inclusive oceano, sem mudar seus tipos. Editar um hexágono preserva o percurso.</p>
-    </div>
-    <fieldset class="print-controls">
-      <legend>Informações no mapa impresso</legend>
-      <label><input id="print-locations" type="checkbox" /> Mostrar locais no mapa impresso</label>
-      <label><input id="print-danger" type="checkbox" /> Mostrar perigo no mapa impresso</label>
-      <p>A chave reúne todos os hexágonos em uma folha A4, com nomes abreviados e espaço para anotações. Não entregue essa folha aos jogadores.</p>
-    </fieldset>
-    <div class="history-controls" aria-label="Histórico da sessão">
-      <button id="undo" type="button" disabled>Desfazer</button>
-      <button id="redo" type="button" disabled>Refazer</button>
-      <span>Histórico desta sessão · inclui a substituição do mapa.</span>
-    </div>
-    <section class="storage-controls" aria-label="Salvar e transferir mapa">
-      <div class="storage-actions">
-        <button id="export-map" type="button">Exportar mapa</button>
-        <label>Importar mapa <input id="import-map" type="file" accept=".json,application/json"></label>
-        <button id="retry-save" type="button">Tentar salvar novamente</button>
-      </div>
-      <p id="storage-status" role="status"></p>
-      <p id="file-status" role="status"></p>
-      <p>Salvamento automático neste navegador. Exporte uma cópia para guardar ou transferir o mapa. O histórico não é salvo.</p>
-    </section>
+    <nav class="workspace-links" aria-label="Áreas da região">
+      <a href="#comparison">Mapa</a><a href="#consultation">Consultar</a><a href="#preparation">Gerar</a>
+    </nav>
     <div class="workspace">
-      <aside class="inspector" aria-label="Consulta e instruções">
+      <aside id="preparation" class="preparation" aria-label="Preparação da região" tabindex="-1">
+        <h2>Gerar região</h2>
+        <form id="generation-form" class="generation-controls" aria-label="Opções de geração">
+          <label>Semente<input name="seed" value="terras-01" required maxlength="80" autocomplete="off" /></label>
+          <label>Terreno inicial<select name="initialTerrain">
+            <option value="random">Sortear com 2d6</option>
+            ${terrainPositions.map(position => `<option value="${position}">${terrainNames(defaultOptions)[position]}</option>`).join('')}
+          </select></label>
+          <label>Deserto ou ártico<select name="arid"><option>Deserto</option><option>Ártico</option></select></label>
+          <label>Floresta ou selva<select name="forest"><option>Floresta</option><option>Selva</option></select></label>
+          <label>Rio ou litoral<select name="water"><option>Rio</option><option>Litoral</option></select></label>
+          <button class="generate-button" type="submit">Gerar região</button>
+          <p id="generation-summary" class="generation-summary" aria-live="polite"></p>
+        </form>
+        <div class="river-controls">
+          <label><input id="river-enabled" type="checkbox" aria-describedby="river-help" />Rio contínuo (adaptação opcional)</label>
+          <p id="river-help">Uma linha de norte a sul, por semente. Cruza qualquer terreno, inclusive oceano, sem mudar seus tipos. Editar um hexágono preserva o percurso.</p>
+        </div>
+        <fieldset class="print-controls">
+          <legend>No mapa impresso</legend>
+          <label><input id="print-locations" type="checkbox" /> Mostrar locais no mapa impresso</label>
+          <label><input id="print-danger" type="checkbox" /> Mostrar perigo no mapa impresso</label>
+          <p>A chave reúne todos os hexágonos em uma folha A4, com nomes abreviados e espaço para anotações. Não entregue essa folha aos jogadores.</p>
+        </fieldset>
+        <section class="storage-controls" aria-label="Salvar e transferir mapa">
+          <p id="storage-status" role="status"></p>
+          <p id="file-status" role="status"></p>
+          <button id="retry-save" type="button" hidden>Tentar salvar novamente</button>
+          <p>Salvamento automático neste navegador. Exporte uma cópia para guardar ou transferir o mapa. O histórico não é salvo.</p>
+        </section>
+      </aside>
+      <div id="comparison" class="sheets" tabindex="-1"></div>
+      <aside id="consultation" class="inspector" aria-label="Consulta e instruções" tabindex="-1">
         <section>
           <h2>Hexágono em foco</h2>
           <div id="selection" role="status" aria-live="polite" aria-atomic="true">
@@ -91,21 +94,20 @@ app.innerHTML = `
             <p>Gerar terreno usa o terreno atual deste hexágono como referência. Os vizinhos não mudam.</p>
           </div>
         </section>
-        <section>
-          <h2>Da mesa para o mapa</h2>
+        <details>
+          <summary>Da mesa para o mapa</summary>
           <p>Geração em lote: cada terreno usa um vizinho já gerado como referência.</p>
           <p>As tabelas não garantem clima, costas ou rios contínuos. Não incluem cataclismos.</p>
           <p>Grade aprovada: 108 hexágonos, ponta para cima e margens mínimas de 12 mm.</p>
-        </section>
+        </details>
         <details>
           <summary>Preparar a impressão</summary>
-          <p>Uma página A4 retrato. Use escala de 100%, sem margens adicionais e sem cabeçalhos ou rodapés do navegador.</p>
+          <p>Duas páginas A4 retrato: mapa e chave. Use escala de 100%, sem margens adicionais e sem cabeçalhos ou rodapés do navegador.</p>
           <p>Salve como PDF ou imprima. A linha de conferência deve medir 50 mm no papel.</p>
         </details>
         <p id="keyboard-help" class="keyboard-help">Teclado: Tab entra em cada grade. Use as setas para mover o foco e Enter ou Espaço para selecionar. Home e End vão ao início e ao fim da linha.</p>
+        <p class="history-help">Histórico desta sessão · inclui a substituição do mapa.</p>
       </aside>
-      <div id="comparison" class="sheets" tabindex="-1">
-      </div>
     </div>
     <div id="region-key"></div>
     <footer class="app-footer">
@@ -116,12 +118,14 @@ app.innerHTML = `
 
 let region = generateRegion(densities.compacta, defaultOptions);
 const storageStatus = app.querySelector<HTMLParagraphElement>('#storage-status')!;
+const retrySaveButton = app.querySelector<HTMLButtonElement>('#retry-save')!;
 let storageBlocked = false;
 try {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved !== null) region = decodeRegion(saved);
 } catch {
   storageBlocked = true;
+  retrySaveButton.hidden = false;
   storageStatus.textContent = 'Não foi possível recuperar o mapa salvo. Ele não será sobrescrito. Exporte o mapa atual ou tente salvar novamente para substituir o salvo.';
 }
 
@@ -129,12 +133,14 @@ function saveRegion() {
   if (storageBlocked) return;
   try {
     localStorage.setItem(STORAGE_KEY, encodeRegion(region));
+    retrySaveButton.hidden = true;
     storageStatus.textContent = 'Salvo neste navegador. Mantenha também uma cópia exportada.';
   } catch {
+    retrySaveButton.hidden = false;
     storageStatus.textContent = 'Não foi possível salvar neste navegador. As alterações estão apenas nesta sessão. Exporte o mapa ou tente salvar novamente.';
   }
 }
-app.querySelector('#retry-save')!.addEventListener('click', () => {
+retrySaveButton.addEventListener('click', () => {
   if (storageBlocked && !window.confirm('Substituir o salvamento que não pôde ser recuperado pelo mapa atual?')) return;
   storageBlocked = false;
   saveRegion();
@@ -296,7 +302,7 @@ function selectHex(element: SVGGElement, density: Density, cell: HexCell) {
   }
   selection.querySelector('.selection-local')!.textContent = cell.local
     ? `Local: ${cell.local.category} · ${cell.local.name}` : 'Sem local';
-  if (window.matchMedia('(max-width: 650px)').matches) {
+  if (window.matchMedia('(max-width: 900px)').matches) {
     selection.scrollIntoView({ block: 'nearest' });
   }
 }

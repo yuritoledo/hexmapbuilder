@@ -1,0 +1,157 @@
+/* Screen identity is isolated from the approved A4 sheets. */
+@media screen {
+  :root { background: #fff; scrollbar-color: #505050 #fff; }
+  #app {
+    --ink: #151515;
+    --muted: #505050;
+    --line: #bcbcbc;
+    color: var(--ink);
+    font-family: 'Source Sans 3 Variable', 'Helvetica Neue', sans-serif;
+    line-height: 1.45;
+  }
+  #app ::selection { background: var(--ink); color: #fff; }
+  #app :focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+  #app a { text-underline-offset: 4px; }
+  #app button, .import-button {
+    min-height: 44px;
+    border: 1px solid var(--ink);
+    border-radius: 0;
+    background: #fff;
+    color: var(--ink);
+    padding: 9px 13px;
+    font: inherit;
+    font-size: 15px;
+    line-height: 1.35;
+  }
+  #app button:hover:not(:disabled), .import-button:hover { background: #ededed; }
+  #app button:disabled { color: #666; border-color: var(--line); cursor: not-allowed; }
+  #app .generate-button, #app .print-button { background: var(--ink); color: #fff; }
+  #app .generate-button:hover, #app .print-button:hover { background: #3b3b3b; }
+  .app-header {
+    max-width: 1540px;
+    margin-inline: auto;
+    padding: 20px 36px;
+    min-height: 88px;
+    border-bottom: 0;
+    gap: 24px;
+  }
+  .wordmark {
+    display: block;
+    flex-shrink: 0;
+    font: 600 35px/1.2 'Eczar Variable', Georgia, serif;
+    letter-spacing: -0.03em;
+  }
+  .header-actions, .history-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0; }
+  .header-actions { justify-content: flex-end; }
+  .import-button { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
+  .import-button:focus-within { outline: 2px solid var(--ink); outline-offset: 4px; }
+  .import-button:has(input:disabled) { color: #666; border-color: var(--line); cursor: wait; }
+  .import-button input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+  #app main { max-width: 1540px; padding: 14px 36px 24px; }
+  .intro { display: block; padding: 0 0 23px; margin-bottom: 24px; border-bottom: 3px solid var(--ink); }
+  .intro h1 {
+    margin: 0 0 7px;
+    font: 600 44px/1.2 'Eczar Variable', Georgia, serif;
+    letter-spacing: -0.025em;
+  }
+  .intro p { max-width: 75ch; font-size: 16px; line-height: 1.5; }
+  .workspace-links { display: none; }
+  .workspace { grid-template-columns: 225px minmax(0, 1fr) 252px; justify-content: normal; gap: 30px; }
+  .preparation { grid-column: 1; grid-row: 1; padding-right: 22px; border-right: 1px solid var(--line); min-width: 0; }
+  .preparation h2, .inspector h2 { margin: 0 0 18px; font: 600 27px/1.2 'Eczar Variable', Georgia, serif; }
+  .generation-controls { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 0; margin: 0 0 24px; border: 0; }
+  .generation-controls label, .cell-editor label { font-size: 16px; line-height: 1.35; gap: 6px; font-weight: 600; }
+  .generation-controls input, .generation-controls select, .cell-editor input, .cell-editor select {
+    font-family: inherit;
+    font-size: 16px;
+    padding: 8px 10px;
+    border: 1px solid #777;
+    border-radius: 0;
+    background: #fff;
+    color: var(--ink);
+    caret-color: var(--ink);
+  }
+  #app input::placeholder { color: #616161; opacity: 1; }
+  .generation-summary { font-size: 14px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+  .river-controls { margin-bottom: 28px; }
+  .river-controls label { align-items: flex-start; font-size: 15px; font-weight: 600; }
+  .river-controls input, .print-controls input { flex: 0 0 18px; accent-color: var(--ink); }
+  .river-controls p, .print-controls p { margin: 8px 0 0; font-size: 14px; line-height: 1.5; }
+  .print-controls { margin: 0 0 24px; padding: 16px 0 0; border: 0; border-top: 1px solid var(--line); min-width: 0; }
+  .print-controls legend { padding: 0; font: 600 23px/1.2 'Eczar Variable', Georgia, serif; }
+  .print-controls label { font-size: 15px; line-height: 1.4; padding-block: 5px; }
+  .storage-controls { padding: 16px 0 0; margin: 0; border: 0; border-top: 1px solid var(--line); }
+  .storage-controls p { font-size: 14px; color: var(--muted); line-height: 1.5; }
+  #app #retry-save { margin-top: 12px; width: 100%; }
+  .sheets { grid-column: 2; grid-row: 1; display: block; width: 100%; }
+  .sheets .comparison { max-width: 500px; margin-inline: auto; }
+  .sheets .paper { box-shadow: none; }
+  .sheets .map-sheet {
+    --ink: #252720;
+    --muted: #5b5e53;
+    --line: #d4d7cb;
+    color: #252720;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+  .sheets .sheet-heading { padding-bottom: 8px; padding-top: 0; }
+  .sheets .sheet-heading h2 { font: 600 19px/1.3 'Eczar Variable', Georgia, serif; }
+  .sheets .sheet-heading p, .sheets .sheet-caption { font-size: 13px; line-height: 1.5; }
+  .sheets .hex:hover .hex-boundary { fill: #f1f1f1; }
+  .sheets .hex[aria-pressed='true'] .hex-boundary { fill: #e9e9e9; }
+  .inspector { grid-column: 3; grid-row: 1; border-top: 5px solid var(--ink); padding-top: 14px; font-size: 16px; line-height: 1.5; min-width: 0; }
+  .inspector section { padding-bottom: 22px; margin-bottom: 18px; }
+  .inspector p { margin-top: 10px; }
+  .inspector .empty-selection { font: 500 24px/1.4 'Eczar Variable', Georgia, serif; color: var(--ink); }
+  .inspector .selection-density { font-size: 14px; }
+  .inspector .selection-coordinate {
+    display: inline-block;
+    padding: 2px 12px;
+    margin: 10px 0 6px;
+    font: 500 34px/1.3 'Eczar Variable', Georgia, serif;
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+    background: var(--ink);
+  }
+  .selection-terrain { font-size: 20px; }
+  .inspector dl { margin-top: 16px; font-size: 15px; }
+  .cell-editor { margin-top: 24px; }
+  .cell-editor p, .inspector .keyboard-help, .history-help { font-size: 14px; line-height: 1.5; }
+  .inspector details { padding-block: 8px; border-bottom: 1px solid var(--line); }
+  .inspector summary { font-size: 16px; padding-block: 7px; }
+  .region-key { max-width: none; margin-top: 36px; font-size: 16px; }
+  .region-key summary { font: 600 25px/1.3 'Eczar Variable', Georgia, serif; }
+  .region-key thead th { font-size: 15px; }
+  .app-footer { margin-top: 32px; padding-top: 16px; font-size: 14px; }
+  #comparison, #preparation, #consultation { scroll-margin-top: 20px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .selection-coordinate { animation: ink-arrival 220ms cubic-bezier(.16, 1, .3, 1); }
+    @keyframes ink-arrival { from { box-shadow: inset 0 -5px 0 #888; } to { box-shadow: inset 0 0 0 #888; } }
+  }
+  @media (max-width: 1100px) and (min-width: 901px) {
+    .app-header { flex-wrap: wrap; padding-inline: 24px; }
+    .header-actions { justify-content: flex-start; }
+    #app main { padding-inline: 24px; }
+    .workspace { grid-template-columns: 195px minmax(0, 1fr) 215px; gap: 20px; }
+    .preparation { padding-right: 16px; }
+  }
+  @media (max-width: 900px) {
+    .app-header { flex-wrap: wrap; padding: 14px 18px 8px; gap: 10px; }
+    .wordmark { font-size: 30px; }
+    .header-actions { justify-content: flex-start; gap: 7px; }
+    #app .header-actions button, .import-button { font-size: 14px; padding: 9px 11px; }
+    #app main { padding: 10px 18px 24px; }
+    .intro { margin-bottom: 0; padding-bottom: 10px; }
+    .intro h1 { font-size: 32px; margin-bottom: 7px; }
+    .intro p { font-size: 15px; }
+    .workspace-links { display: flex; gap: 24px; padding-block: 0; margin-bottom: 8px; }
+    .workspace-links a { display: inline-flex; align-items: center; color: var(--ink); font-size: 16px; min-height: 44px; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    .sheets { grid-column: 1; grid-row: 1; }
+    .inspector { grid-column: 1; grid-row: 2; width: 100%; }
+    .preparation { grid-column: 1; grid-row: 3; border: 0; padding: 24px 0 0; border-top: 1px solid var(--line); }
+    .inspector section { padding-bottom: 20px; margin-bottom: 16px; }
+    .region-key { margin-top: 28px; }
+    .key-scroll { max-width: 100%; }
+    #selection { min-height: 90px; }
+  }
+}

@@ -62,7 +62,7 @@ test('prints all coordinates on one separate A4 key even when its screen disclos
   const key = page.locator('#print-output .print-key');
   await expect(key).toBeVisible();
   expect(await key.locator('tbody th').allTextContents()).toEqual(expectedCoordinates);
-  await expect(key.locator('tbody tr').filter({ hasText: '0506' })).toContainText('Base');
+  await expect(key.locator('.key-locations li').filter({ hasText: '0506' })).toContainText('Base das Expedições');
   await expect(key.locator('tbody tr').last()).toContainText('0912');
   const pdf = await page.pdf({ path: testInfo.outputPath('mapa-e-chave-a4.pdf'), preferCSSPageSize: true });
   const pdfDocument = await PDFDocument.load(pdf);
@@ -110,7 +110,8 @@ test('prints edited water/base/local data safely, with long names and applied op
   await expect(output.locator('[data-expedition-base]')).toHaveCount(1);
   await expect(output.locator('[data-local]')).toHaveCount(108);
   await expect(output.locator('.print-key tbody tr')).toHaveCount(108);
-  await expect(output.locator('.print-key')).toContainText('Litoral');
+  await expect(output.locator('.print-key tbody td').first()).toHaveText('Oceano');
+  await expect(output.locator('.map-generation').last()).toContainText('Litoral');
   await expect(output).not.toContainText('rascunho não aplicado');
   await page.pdf({ path: testInfo.outputPath('chave-nomes-longos.pdf'), preferCSSPageSize: true });
 });

@@ -94,7 +94,7 @@ test('complete enabled-river journey preserves exact edits and all random contin
   await expect(key.locator('tbody tr')).toHaveCount(108);
   await expect(key).toContainText('Porto <seguro>');
   await expect(key).toContainText('Base das Expedições');
-  await expect(key.locator('tbody tr').filter({ hasText: '0506' }).locator('td').first()).toContainText('4');
+  await expect(key.locator('tbody tr').filter({ hasText: '0506' }).locator('td').nth(1)).toHaveText('4');
   await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
   await expect(page.locator('#print-output')).toHaveCount(0);
   await page.emulateMedia({ media: 'screen' });

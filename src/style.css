@@ -148,22 +148,33 @@ summary { font-size: 13px; font-weight: 600; padding: 6px 0; }
   #app { display: none; }
   #print-output { display: block; }
   #print-output .comparison { page: map; }
-  .print-key { page: key; break-before: page; margin: 0; padding: 0; border: 0; width: 186mm; max-width: none; color: black; font-size: 7.5pt; line-height: 1.2; }
-  .print-key h1 { font-size: 14pt; margin: 0 0 1.5mm; }
-  .print-key p { margin: 0 0 1.2mm; color: black; }
-  .print-key .key-metadata { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .print-key .key-legend { font-size: 7pt; }
-  .key-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3mm; margin-top: 2mm; }
-  .print-key table { width: 100%; border-collapse: collapse; table-layout: fixed; text-align: left; font-variant-numeric: tabular-nums; }
-  .print-key th, .print-key td { padding: 0.4mm; color: black; border-bottom: 0.2mm solid #aaa; vertical-align: middle; box-sizing: border-box; }
-  .print-key thead th { height: 5mm; font-size: 7.5pt; }
-  .print-key tbody tr { height: 6.5mm; break-inside: avoid; }
+  .print-key { page: key; break-before: page; display: flex; flex-direction: column; min-height: 273mm; margin: 0; padding: 0; border: 0; width: 186mm; max-width: none; color: black; font-size: 9.2pt; line-height: 1.32; }
+  .print-key h1 { font-size: 20pt; line-height: 1.12; margin: 0 0 2mm; }
+  .print-key p { color: black; }
+  .print-key .key-metadata { font-size: 9pt; margin: 0 0 3mm; overflow-wrap: anywhere; }
+  .key-quick, .key-locations { flex: none; }
+  .key-section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 3mm; margin: 0 0 1.5mm; padding-bottom: 1.2mm; border-bottom: 0.35mm solid #222; break-after: avoid; }
+  .print-key h2 { font: 400 12pt/1.2 Georgia, serif; margin: 0; }
+  .print-key .key-legend { font-size: 8pt; margin: 0; line-height: 1.25; }
+  .key-columns { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4mm; }
+  .print-key table { width: 100%; border-collapse: collapse; table-layout: fixed; text-align: left; font-variant-numeric: tabular-nums; line-height: 1.05; }
+  .print-key th, .print-key td { padding: 0 0.4mm; color: black; border-bottom: 0.15mm solid #ccc; vertical-align: middle; }
+  .print-key thead th { height: 5mm; font-size: 8pt; border-color: #666; }
+  .print-key tbody tr { height: 3.65mm; break-inside: avoid; }
   .print-key tbody th { font-weight: 400; }
-  .print-key .key-local span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .print-key .key-coordinate-col { width: 8mm; }
-  .print-key .key-terrain-col { width: 8mm; }
-  .print-key .key-local-col { width: 24mm; }
-  .print-key .key-observations { border-left: 0.2mm solid #aaa; }
+  .print-key tr > :last-child { text-align: right; padding-right: 1.5mm; }
+  .print-key .key-coordinate-col { width: 15mm; }
+  .print-key .key-danger-col { width: 10mm; }
+  .key-locations { margin-top: 4mm; }
+  .key-locations .key-section-heading { margin-bottom: 1mm; }
+  .key-local-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6mm; }
+  .key-local-columns ul { list-style: none; padding: 0; margin: 0; }
+  .key-local-columns li { display: grid; grid-template-columns: 12mm minmax(0, 1fr); gap: 1mm; min-height: 4.8mm; padding: 0.45mm 0; border-bottom: 0.15mm solid #ddd; break-inside: avoid; overflow-wrap: anywhere; }
+  .key-local-coordinate { font-variant-numeric: tabular-nums; }
+  .key-local-category { font-size: 8.3pt; color: #444; }
+  .key-notes { margin-top: 4mm; flex: 1; display: flex; flex-direction: column; }
+  .key-notes .key-section-heading { margin-bottom: 0; }
+  .key-notes-space { flex: 1; min-height: 40mm; }
   .comparison { width: 210mm; height: 297mm; break-after: page; break-inside: avoid; margin: 0; padding: 0; }
   .comparison:last-child { break-after: auto; }
   .paper { box-shadow: none; }
