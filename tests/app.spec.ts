@@ -4,7 +4,7 @@ import { PDFDocument } from 'pdf-lib';
 test('abre a grade aprovada e consulta um hexágono pelo mouse', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveTitle('Hexmap Builder — geração de terrenos');
-  await expect(page.getByRole('heading', { name: 'Gere seu próximo território.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'A região ganha vida.' })).toBeVisible();
   const map = page.getByRole('group', { name: 'Grade B · Compacta' });
   await expect(map.getByRole('button')).toHaveCount(108);
   const hex = map.getByRole('button').first();
@@ -61,7 +61,7 @@ test('imprime uma página A4 em tamanho real e sem destaque da seleção', async
   await page.getByRole('group', { name: 'Grade B · Compacta' }).getByRole('button').first().click();
   await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
   await page.emulateMedia({ media: 'print' });
-  await expect(page.getByRole('heading', { name: 'Gere seu próximo território.' })).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'A região ganha vida.' })).toBeHidden();
   const polygon = page.locator('#print-output .hex polygon').first();
   await expect(polygon).toHaveCSS('fill', 'rgb(255, 255, 255)');
   await expect(polygon).toHaveCSS('stroke-width', '0.3px');

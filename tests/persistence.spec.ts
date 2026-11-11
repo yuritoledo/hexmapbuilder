@@ -89,6 +89,7 @@ test('preserves a corrupt saved snapshot until an explicit confirmed replacement
   await page.addInitScript(() => localStorage.setItem('hexmapbuilder.current', '{broken'));
   await page.goto('/');
   await expect(page.locator('#storage-status')).toContainText('não será sobrescrito');
+  await expect(page.locator('#retry-save')).toBeVisible();
   await center(page).click();
   await page.getByLabel('Terreno do hexágono').selectOption('Oceano');
   expect(await page.evaluate(() => localStorage.getItem('hexmapbuilder.current'))).toBe('{broken');
@@ -96,9 +97,11 @@ test('preserves a corrupt saved snapshot until an explicit confirmed replacement
   page.once('dialog', dialog => dialog.dismiss());
   await page.getByRole('button', { name: 'Tentar salvar novamente' }).click();
   expect(await page.evaluate(() => localStorage.getItem('hexmapbuilder.current'))).toBe('{broken');
+  await expect(page.locator('#retry-save')).toBeVisible();
   page.once('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Tentar salvar novamente' }).click();
   await expect(page.locator('#storage-status')).toContainText('Salvo neste navegador');
+  await expect(page.locator('#retry-save')).toBeHidden();
   expect(await page.evaluate(() => localStorage.getItem('hexmapbuilder.current'))).not.toBe('{broken');
 });
 
@@ -113,12 +116,14 @@ test('reports write failure honestly, preserves last save and allows export and 
   await center(page).click();
   await page.getByLabel('Terreno do hexágono').selectOption('Oceano');
   await expect(page.locator('#storage-status')).toContainText('apenas nesta sessão');
+  await expect(page.locator('#retry-save')).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('hexmapbuilder.current'))).toBe(original);
   const edited = await exportMap(page);
   expect(edited).not.toBe(original);
   await page.evaluate('window.restoreStorage()');
   await page.getByRole('button', { name: 'Tentar salvar novamente' }).click();
   await expect(page.locator('#storage-status')).toContainText('Salvo neste navegador');
+  await expect(page.locator('#retry-save')).toBeHidden();
   expect(await page.evaluate(() => localStorage.getItem('hexmapbuilder.current'))).toBe(edited);
 });
 
@@ -126,12 +131,14 @@ test('keeps editor usable when browser storage access is denied', async ({ page 
   await page.addInitScript(() => Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('Denied', 'SecurityError'); } }));
   await page.goto('/');
   await expect(page.locator('#storage-status')).toContainText('Não foi possível recuperar');
+  await expect(page.locator('#retry-save')).toBeVisible();
   await center(page).click();
   await page.getByLabel('Terreno do hexágono').selectOption('Oceano');
   expect(JSON.parse(await exportMap(page)).region.cells.find((cell: { coordinate: string }) => cell.coordinate === '0506').terrain).toBe('Oceano');
   page.once('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Tentar salvar novamente' }).click();
   await expect(page.locator('#storage-status')).toContainText('apenas nesta sessão');
+  await expect(page.locator('#retry-save')).toBeVisible();
 });
 
 test('reloads a generated whitespace-only seed and preserves generation undo and redo', async ({ page }) => {

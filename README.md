@@ -70,7 +70,7 @@
 - Todas as categorias podem ocorrer em qualquer terreno, inclusive água. Não há filtro, nova rolagem ou promessa de coerência geográfica.
 - `local` guarda somente nome e categoria. `expeditionBase` continua separado e permanente; o centro pode conter ambos, inclusive em água.
 - Um losango vazio indica local opcional, acima dos símbolos de terreno. Não substitui unidades de perigo nem o vilarejo da base. Nome e categoria aparecem na seleção, no nome acessível e na chave.
-- A chave na tela e na impressão sempre conserva os dados completos. Os controles de sigilo afetam somente o mapa impresso.
+- A chave na tela, a chave impressa e o arquivo exportado conservam nomes completos. Os controles de sigilo afetam somente o mapa impresso.
 - Não há cataclismos nem promessa de clima ou costas coerentes. O rio contínuo opcional é uma sobreposição independente dos terrenos.
 
 ## Rio contínuo opcional (#8)
@@ -92,20 +92,20 @@
 - Antes de imprimir, escolha **Mostrar locais no mapa impresso** e **Mostrar perigo no mapa impresso**. Ambos começam desmarcados e funcionam de forma independente.
 - Ocultar locais também oculta a Base das Expedições. Ocultar perigo mostra exatamente uma unidade de terreno por hexágono e remove a legenda de perigo.
 - O mapa usa a região atual, inclusive edições. Não usa valores ainda não aplicados no formulário.
-- A chave sempre contém coordenada, terreno, local opcional, base permanente e perigo de todos os 108 hexágonos. Não entregue as páginas da chave aos jogadores.
-- A tabela repete o cabeçalho em cada página. As linhas não se dividem e os nomes longos quebram dentro das células.
+- A chave contém os 108 hexágonos em quatro colunas de 27 linhas, com coordenada, terreno por extenso e perigo 1–4. Uma lista separada reúne categorias e nomes completos dos locais e da Base. O espaço livre de anotações serve para escrever à mão apenas os hexágonos relevantes. Não entregue a chave aos jogadores.
+- Os nomes completos permanecem na chave impressa, no aplicativo e no arquivo exportado. O bloco compartilhado de anotações tem pelo menos 40 mm de altura.
 1. Selecione **Imprimir mapa**.
 2. Use papel **A4**, orientação **retrato** e escala **100%**.
 3. Desative margens adicionais, cabeçalhos e rodapés do navegador.
 4. Imprima ou selecione **Salvar como PDF**.
 5. Confira a página. A linha de conferência deve medir **50 mm**.
 
-- O CSS usa milímetros. O mapa ocupa uma página A4. A chave começa na página seguinte e continua em quantas páginas A4 forem necessárias.
+- O CSS usa milímetros. A região padrão ocupa duas páginas A4: o mapa na primeira e a chave na segunda, com margens de 12 mm na chave. Muitos locais ou nomes editados longos podem exigir páginas adicionais, sem cortar os textos.
 - A folha inclui semente, versão, terreno inicial e variantes para repetir a geração.
 - A semente aparece entre aspas no formato JSON, com espaços preservados e caracteres especiais escapados. As aspas externas não fazem parte da semente.
 - Sementes largas recebem ajuste horizontal de texto para respeitar os 12 mm de margem.
 - Controles, painel e destaque de seleção não aparecem na impressão.
-- Os testes verificam as quatro combinações de sigilo, o conteúdo completo da chave e as páginas A4 no PDF do Chromium.
+- Os testes verificam as quatro combinações de sigilo, duas páginas A4 para a região padrão, nomes completos, anotações compartilhadas e páginas adicionais para 108 nomes longos.
 - O teste não substitui a conferência física da impressora. Outros navegadores e impressoras precisam de conferência.
 
 ## Arquitetura e ferramentas
@@ -113,20 +113,20 @@
 - **TypeScript estrito:** define os dados e detecta erros de tipos.
 - **Vite:** inicia o servidor local e gera os arquivos estáticos.
 - **SVG:** conserva a geometria e o traço na tela e no PDF.
-- **Sem framework de interface:** uma página com estado local, sem API.
+- **React + shadcn/ui:** interface com estado local, sem API. O preset `b1oXx8qG` usa Base UI, estilo Sera, tema emerald, Roboto Slab e ícones Lucide.
 - `src/grid.ts`: tipos de terreno e geometria em milímetros. A alternativa A fica para regressão geométrica; só B aparece na interface.
 - `src/generation.ts`: tabelas, dados com semente, visita da grade e metadados da região.
 - `src/locals.ts`: política de presença, categoria e nomes originais dos locais.
 - `src/river.ts`: percurso opcional por semente e alternância sem alterar os hexágonos.
 - `src/map-view.ts`: desenha a folha, a legenda ativa e os símbolos locais.
 - `src/print-view.ts`: `printMap(container: HTMLElement, region: GeneratedRegion, visibility: PrintVisibility): void` cria a projeção sem alterar a região. `PrintVisibility` contém `showLocations` e `showDanger`.
-- `printKey(container: HTMLElement, region: GeneratedRegion): void` acrescenta a chave completa, sem parâmetros de sigilo. Funciona com o painel da tela fechado.
+- `printKey(container: HTMLElement, region: GeneratedRegion): void` acrescenta a chave compacta, sem parâmetros de sigilo. Funciona com o painel da tela fechado e não altera nomes ou dados da região.
 - `beforeprint` recria `#print-output` a partir da região atual. `afterprint` remove essa cópia. O botão e a impressão nativa do navegador usam o mesmo caminho.
 - Os controles de impressão são preferências da sessão, fora de `GeneratedRegion`. Importar substitui a região atual, não a projeção descartável.
 - `printMap` conserva o percurso do rio e chama `mapSheet`. O rio é uma sobreposição separada do terreno. O sigilo de local/perigo não remove o rio. A impressão não consome dados aleatórios.
-- `src/main.ts`: controla formulário, confirmação, geração, foco e seleção. Mudar o foco não muda a seleção.
+- `src/main.ts`: carrega os estilos e monta a raiz React. `src/App.tsx` controla formulários, histórico, arquivos, foco e seleção.
 - `src/persistence.ts`: formato de arquivo versionado, validação externa e restauração canônica do mapa editado.
-- `src/style.css`: define a apresentação responsiva e as regras de impressão.
+- `src/theme.css`: tokens do preset e Tailwind CSS. `src/workspace.css`: organização responsiva da interface. `src/style.css`: símbolos, folhas SVG, chave e impressão.
 - **Vitest:** verifica geometria, tabelas, probabilidades de 2d6, vizinhança, variantes e repetição por semente.
 - **Playwright + Chromium:** verifica abertura, mouse, teclado, consulta móvel e PDF.
 - **pdf-lib:** lê as dimensões e a quantidade de páginas do PDF nos testes. Não integra o aplicativo.
@@ -154,8 +154,9 @@
 - Floresta usa um pinheiro por unidade. Oceano usa uma onda. Rio usa rotação de 90°.
 - A proveniência dos recortes e das transformações está em `src/assets/kenney/README.md`.
 - Nenhum símbolo ou imagem vem das referências privadas ou do livro.
-- A fonte Literata é servida pelo próprio aplicativo via Fontsource.
-- A licença SIL Open Font License 1.1 acompanha a fonte em `public/OFL-Literata.txt`.
+- Roboto Slab identifica a interface conforme o preset shadcn. Literata permanece nas folhas A4.
+- O aplicativo serve as duas fontes localmente via Fontsource. Não consulta serviços externos de fontes.
+- As licenças acompanham as fontes em `public/Apache-Roboto-Slab.txt` (Apache 2.0) e `public/OFL-Literata.txt` (SIL Open Font License 1.1).
 - `npm audit --omit=dev` não aponta vulnerabilidades na entrega inicial.
 - A auditoria completa aponta avisos moderados na cadeia de lint por `minimatch` (GHSA-g3hv-75wg-m249).
 - Esses pacotes são ferramentas de desenvolvimento. Eles não integram o aplicativo publicado.
@@ -184,7 +185,7 @@
 - `editCell(region: GeneratedRegion, coordinate: string, edit: CellEdit): GeneratedRegion` e `rerollComponent(region: GeneratedRegion, coordinate: string, component: RerollComponent, rollDie?: () => number): GeneratedRegion` ficam em `src/editing.ts`. Coordenada desconhecida lança erro antes de consumir dados. O dado opcional é uma função que retorna inteiros de 1 a 6 para testes controlados.
 - `CellEdit` discrimina `terrain`, `danger` e `local` pelo campo `component`; `value` usa os tipos de `src/grid.ts`. `local: undefined` significa ausência. A API recebe dados internos tipados; `decodeRegion` valida dados externos antes de chamar essa API.
 - `RegionHistory` em `src/history.ts` recebe o mapa inicial. Expõe `current`, `canUndo`, `canRedo`, `apply(region): void`, `undo(): boolean`, `redo(): boolean`. `current` devolve cópia independente; a classe copia os dados recebidos. O estado do mapa é dado simples compatível com JSON e `structuredClone`.
-- `commitRegion(next: GeneratedRegion)` em `src/main.ts` aplica uma ação ao histórico, obtém `history.current`, renderiza e salva o mapa. Ações de importação ou alternância de rio entram por esse ponto para participar do histórico.
+- `commit(next: GeneratedRegion)` em `src/App.tsx` aplica uma ação ao histórico, obtém `history.current`, atualiza o estado React e salva o mapa. Importação e alternância de rio usam esse mesmo caminho.
 - A persistência salva o mapa editado completo, `region.options` aplicadas e todos os contadores. Não reconstrói o mapa apenas pela semente nem lê opções pendentes do formulário. Uma versão do arquivo é separada de `region.version`.
 - `GeneratedRegion.river` contém `{ enabled: boolean; path: string[] }`. Edição e sorteios individuais preservam o percurso; o histórico copia o objeto inteiro. Alternar o rio aplica um snapshot pelo mesmo histórico. O arquivo guarda o percurso completo, não o reconstrói pela semente.
 
