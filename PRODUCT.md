@@ -9,7 +9,7 @@ web
 ## Stack
 
 - Delegado pelo usuário para esta base em 2026-11-09.
-- TypeScript, Vite e SVG; sem framework de interface nesta etapa.
+- TypeScript, React, Vite e SVG. Tailwind CSS e shadcn/ui aplicam o preset `b1oXx8qG` aprovado pelo usuário.
 - Vitest testa geometria e geração. Playwright testa fluxos pelo navegador e PDF.
 - Publicação na Vercel: https://hexmapbuilder.vercel.app.
 
@@ -29,7 +29,7 @@ web
 - Fluxo: gerar, editar, desfazer/refazer, guardar ou transferir um arquivo e imprimir.
 - A impressão separa o mapa dos jogadores e a chave de quem mestra em A4 retrato. A região padrão ocupa duas folhas; conteúdo editado extenso pode exigir folhas adicionais.
 - A chave reúne os 108 hexágonos em quatro colunas de 27, com terreno por extenso e perigo 1–4. Locais e Base ficam em uma lista com categoria e nome completos. Um bloco livre recebe anotações à mão, sem divisões por hexágono.
-- Nomes longos recebem reticências somente na impressão. O aplicativo e o arquivo exportado preservam os nomes completos.
+- O aplicativo, a chave impressa e o arquivo exportado preservam os nomes completos. Textos longos podem exigir páginas adicionais.
 
 ## Capabilities and Constraints
 

@@ -23,7 +23,7 @@ test('complete enabled-river journey preserves exact edits and all random contin
   await page.getByLabel('Deserto ou ártico').selectOption('Ártico');
   await page.getByLabel('Floresta ou selva').selectOption('Selva');
   await page.getByLabel('Rio ou litoral').selectOption('Litoral');
-  await page.getByLabel('Rio contínuo (adaptação opcional)', { exact: true }).check();
+  await page.getByRole('checkbox', { name: 'Rio contínuo (adaptação opcional)', exact: true }).check();
   page.once('dialog', dialog => dialog.accept());
   await action(page, 'Gerar região').click();
   await center(page).focus();
@@ -73,8 +73,8 @@ test('complete enabled-river journey preserves exact edits and all random contin
   expect(await exportMap(page)).toBe(continued);
   for (let i = 0; i < 3; i++) await action(page, 'Desfazer').click();
 
-  await expect(page.getByLabel('Mostrar locais no mapa impresso')).not.toBeChecked();
-  await expect(page.getByLabel('Mostrar perigo no mapa impresso')).not.toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'Mostrar locais no mapa impresso', exact: true })).not.toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'Mostrar perigo no mapa impresso', exact: true })).not.toBeChecked();
   await page.emulateMedia({ media: 'print' });
   const bytes = await page.pdf({ path: testInfo.outputPath('integrated-a4.pdf'), preferCSSPageSize: true });
   const pdf = await PDFDocument.load(bytes);
@@ -107,7 +107,7 @@ test('complete enabled-river journey preserves exact edits and all random contin
 
 test('enabled-river storage failure keeps the last save and current export, then retries without losing redo', async ({ page }) => {
   await page.goto('/');
-  await page.getByLabel('Rio contínuo (adaptação opcional)', { exact: true }).check();
+  await page.getByRole('checkbox', { name: 'Rio contínuo (adaptação opcional)', exact: true }).check();
   await center(page).click();
   await rerollAll(page);
   const saved = await exportMap(page);
@@ -135,7 +135,7 @@ test('enabled-river storage failure keeps the last save and current export, then
 
 test('390px consultation exposes coordinates, local, danger, base and river without requiring editing', async ({ page }) => {
   await page.goto('/');
-  await page.getByLabel('Rio contínuo (adaptação opcional)', { exact: true }).check();
+  await page.getByRole('checkbox', { name: 'Rio contínuo (adaptação opcional)', exact: true }).check();
   await center(page).click();
   await page.getByLabel('Nome do local').fill('Porto de consulta');
   await action(page, 'Aplicar local').click();
@@ -172,7 +172,7 @@ for (const arid of ['Deserto', 'Ártico']) {
           await page.getByLabel('Deserto ou ártico').selectOption(arid);
           await page.getByLabel('Floresta ou selva').selectOption(forest);
           await page.getByLabel('Rio ou litoral').selectOption(water);
-          await page.getByLabel('Rio contínuo (adaptação opcional)', { exact: true }).check();
+          await page.getByRole('checkbox', { name: 'Rio contínuo (adaptação opcional)', exact: true }).check();
           await page.getByRole('combobox', { name: 'Terreno inicial', exact: true }).selectOption(initial);
           page.once('dialog', dialog => dialog.accept());
           await action(page, 'Gerar região').click();
